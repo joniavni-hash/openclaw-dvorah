@@ -144,8 +144,10 @@ class ActionExecutor:
             text = execution_result.get("details", "✅ נתונים נרשמו במעקב הכושר")
         elif action == "legal_analysis_ready":
             text = "⚖️ הניתוח המשפטי הושלם ומחכה לבדיקתך"
-        elif action in ("group_response_suggested", "direct_response"):
+        elif action == "group_response_suggested":
             return ""
+        elif action == "direct_response":
+            text = execution_result.get("details", "")
         else:
             return ""
 
