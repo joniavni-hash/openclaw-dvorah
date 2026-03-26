@@ -151,6 +151,8 @@ class ActionExecutor:
             text = execution_result.get("details", "✅ נתונים נרשמו במעקב הכושר")
         elif action == "legal_analysis_ready":
             text = "⚖️ הניתוח המשפטי הושלם ומחכה לבדיקתך"
+        elif action == "group_retrieval_response":
+            text = execution_result.get("details", "אין הודעות שמורות מהקבוצה")
         elif action == "group_response_suggested":
             return ""
         elif action == "direct_response":
