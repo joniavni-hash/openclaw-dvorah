@@ -72,9 +72,25 @@ class AgentExecutor:
             }
 
     def _handle_odya(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """WhatsApp group agent — analyze message and decide whether to reply."""
+        """WhatsApp group agent — analyze message or retrieve group data."""
+        domain = routing_result.get("classification", {}).get("domain", "whatsapp_group")
         group_id = metadata.get("group_id") or routing_result.get("group_id", "unknown")
         role = metadata.get("role", "active")
+
+        # DM query about a group → retrieval response
+        if domain == "group_retrieval":
+            tier = routing_result.get("model", "tier1")
+            return {
+                "status": "analysis_ready",
+                "agent": "אודיה",
+                "domain": "group_retrieval",
+                "response_type": "group_retrieval",
+                "requires_approval": False,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
+                "summary": "אין הודעות שמורות מהקבוצה",
+                "analysis": {"should_respond": True},
+                "metadata": {**_meta(tier, "group_retrieval"), "group_id": group_id},
+            }
         confidence = routing_result.get("classification", {}).get("confidence", 0.9)
         
         # Observer role → always silence
@@ -96,12 +112,8 @@ class AgentExecutor:
                     "approval_reason": "Observer role — auto-silence",
                     "action": "none",
                 },
-                "metadata": {
-                    "model_tier": routing_result.get("model", "tier1"),
-                    "group_id": group_id,
-                    "role": role,
-                    "specialization": "group_communication",
-                },
+                "metadata": {**_meta(routing_result.get("model", "tier1"), "group_communication"),
+                    "group_id": group_id, "role": role},
             }
         
         # Active / responder / representative → needs Dvorah to spawn prompt

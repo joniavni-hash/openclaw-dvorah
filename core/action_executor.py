@@ -71,20 +71,27 @@ class ActionExecutor:
             }
         
         elif agent_name == "אודיה" and status == "analysis_ready":
-            # Group message analysis ready
             analysis = agent_result.get("analysis", {})
-            if analysis.get("should_respond", False):
+            domain = agent_result.get("domain", "")
+            # DM query about a group → return summary text
+            if domain == "group_retrieval":
+                return {
+                    "status": "completed",
+                    "action": "group_retrieval_response",
+                    "details": agent_result.get("summary", "אין הודעות שמורות מהקבוצה"),
+                }
+            elif analysis.get("should_respond", False):
                 return {
                     "status": "response_recommended",
                     "action": "group_response_suggested",
                     "confidence": analysis.get("confidence", 0),
-                    "draft_needed": True
+                    "draft_needed": True,
                 }
             else:
                 return {
                     "status": "no_response_needed",
                     "action": "group_message_analyzed",
-                    "reason": "Message doesn't require response"
+                    "reason": "Message doesn't require response",
                 }
         
         elif agent_name == "צופית":
