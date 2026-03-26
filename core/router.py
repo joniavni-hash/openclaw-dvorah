@@ -238,12 +238,13 @@ class Router:
         # ── Normal routing ────────────────────────────────────────────────────
         classification = self.classify_message(message, channel, group_id)
         context = self.load_context(classification["domain"], message, channel, group_id)
-        model_tier = self.DOMAIN_TIERS.get(classification["domain"], "tier2")
+        # Router only recommends tier — model_selector enforces final decision
+        recommended_tier = self.DOMAIN_TIERS.get(classification["domain"], "tier2")
 
         return {
             "classification": classification,
             "context": context,
-            "model": model_tier,
+            "model": recommended_tier,   # recommendation only, overridden by model_selector
             "routing_decision": {
                 "action": "route_to_agent" if classification["agent"] != "direct" else "handle_direct",
                 "agent": classification["agent"],

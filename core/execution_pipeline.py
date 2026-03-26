@@ -18,6 +18,7 @@ from router import route_message
 from context_guard import context_status, emergency_compact
 from agent_executor import AgentExecutor
 from action_executor import execute_if_approved, send_response_if_ready
+from model_selector import select_model, ModelDecision
 
 # Feature flag — set AUTO_GIT_PUSH_ENABLED=false to disable
 AUTO_GIT_PUSH_ENABLED = os.environ.get("AUTO_GIT_PUSH_ENABLED", "true").lower() != "false"
@@ -68,16 +69,28 @@ class ExecutionPipeline:
                 emergency_compact()
                 ctx_status = context_status()
             
+            # Step 2b: Model governance — single source of truth
+            is_no_reply = routing_result.get("routing_decision", {}).get("action") == "no_reply"
+            model_decision = select_model({
+                "domain":           routing_result["classification"]["domain"],
+                "recommended_tier": routing_result.get("model", "tier2"),
+                "no_reply":         is_no_reply,
+            })
+            # Inject enforced model into routing_result so agents receive it
+            routing_result["model"]          = model_decision.tier
+            routing_result["model_decision"] = model_decision.to_dict()
+
             # Step 3: Execute based on routing decision
             if routing_result["routing_decision"]["action"] == "handle_direct":
                 result = self._handle_direct(message, routing_result, metadata)
             else:
                 # Use real agent executor instead of dummy responses
                 agent_name = routing_result["routing_decision"]["agent"]
-                agent_metadata = {**(metadata or {}), "execution_id": execution_id}
+                agent_metadata = {**(metadata or {}), "execution_id": execution_id,
+                                  "model_decision": model_decision.to_dict()}
                 if group_id:
                     agent_metadata["group_id"] = group_id
-                result = self.agent_executor.execute_agent_task(agent_name, message, routing_result, 
+                result = self.agent_executor.execute_agent_task(agent_name, message, routing_result,
                                           agent_metadata)
             
             # Step 4: QA Check
