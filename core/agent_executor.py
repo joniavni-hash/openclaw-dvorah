@@ -77,20 +77,39 @@ class AgentExecutor:
         group_id = metadata.get("group_id") or routing_result.get("group_id", "unknown")
         role = metadata.get("role", "active")
 
-        # DM query about a group → retrieval response
+        # DM query about a group → call odya_agent for real retrieval
         if domain == "group_retrieval":
             tier = routing_result.get("model", "tier1")
-            return {
-                "status": "analysis_ready",
-                "agent": "אודיה",
-                "domain": "group_retrieval",
-                "response_type": "group_retrieval",
-                "requires_approval": False,
-                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
-                "summary": "אין הודעות שמורות מהקבוצה",
-                "analysis": {"should_respond": True},
-                "metadata": {**_meta(tier, "group_retrieval"), "group_id": group_id},
-            }
+            try:
+                import sys as _sys
+                _sys.path.insert(0, str(self.workspace / "agents" / "odya-whatsapp"))
+                from odya_agent import OdyaAgent
+                agent = OdyaAgent()
+                payload = agent.execute(message, {**metadata, "domain": domain})
+                pd = payload.to_dict()
+                # Normalize to pipeline-expected shape
+                return {
+                    "status": "analysis_ready",
+                    "agent": "אודיה",
+                    "domain": "group_retrieval",
+                    "response_type": "group_retrieval",
+                    "requires_approval": False,
+                    "summary": pd.get("final_text", ""),
+                    "analysis": {"should_respond": True},
+                    "metadata": {**_meta(tier, "group_retrieval"),
+                                 **pd.get("metadata", {}),
+                                 "group_id": group_id},
+                }
+            except Exception as e:
+                return {
+                    "status": "analysis_ready",
+                    "agent": "אודיה",
+                    "domain": "group_retrieval",
+                    "summary": "אין הודעות שמורות מהקבוצה",
+                    "analysis": {"should_respond": True},
+                    "metadata": {**_meta(tier, "group_retrieval"),
+                                 "group_id": group_id, "error": str(e)},
+                }
         confidence = routing_result.get("classification", {}).get("confidence", 0.9)
         
         # Observer role → always silence

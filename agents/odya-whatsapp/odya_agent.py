@@ -153,6 +153,35 @@ class OdyaAgent(DomainAgent):
             },
         )
 
+
+    def _parse_time_range(self, message: str) -> int:
+        """
+        Extract requested lookback days from message text.
+        Returns integer days. Default: 1.
+        Preserves exact user request — never substitutes silently.
+        """
+        import re
+        msg = message.lower()
+
+        # Explicit number + unit
+        m = re.search(r'(\d+)\s*(יום|ימים|days?)', msg)
+        if m:
+            return int(m.group(1))
+
+        # Common phrases
+        if any(x in msg for x in ['היום', 'today', 'הבוקר', 'this morning']):
+            return 1
+        if any(x in msg for x in ['אתמול', 'yesterday']):
+            return 2   # today + yesterday
+        if any(x in msg for x in ['יומיים', 'two days', '2 days']):
+            return 2
+        if any(x in msg for x in ['שבוע', 'week', 'שבוע שעבר']):
+            return 7
+        if any(x in msg for x in ['חודש', 'month']):
+            return 30
+
+        return 1  # default: today only
+
     def _execute_group_retrieval(self, message: str, context: Dict) -> FinalPayload:
         """
         Retrieval-first path for DM queries about a group.
@@ -176,34 +205,45 @@ class OdyaAgent(DomainAgent):
                           "output_mode": "direct_send"},
             )
 
+        # Parse requested time range from message
+        requested_days = self._parse_time_range(message)
+
         # Try to fetch messages via group_messages.py
         try:
             ws = str(WORKSPACE)
             result = subprocess.run(
-                ["python3", f"{ws}/scripts/group_messages.py", group_id, "--days", "3"],
+                ["python3", f"{ws}/scripts/group_messages.py", group_id, "--days", str(requested_days)],
                 capture_output=True, text=True, timeout=10, cwd=ws
             )
             raw = result.stdout.strip()
         except Exception as e:
             raw = f"ERROR: {e}"
 
+        if requested_days == 1:
+            range_label = "יום"
+        elif requested_days == 2:
+            range_label = "יומיים"
+        elif requested_days == 7:
+            range_label = "שבוע"
+        elif requested_days == 30:
+            range_label = "חודש"
+        else:
+            range_label = f"{requested_days} ימים"
+
         if not raw or raw == "NO_MESSAGES_FOUND":
             # Check GROUP_MEMORY.md for cached summary
             mem_file = WORKSPACE / "state" / "GROUP_MEMORY.md"
             cached = ""
             if mem_file.exists():
-                content = mem_file.read_text(encoding="utf-8")
-                # Extract section for this group
-                for line in content.split("\n"):
+                mem_content = mem_file.read_text(encoding="utf-8")
+                for line in mem_content.split("\n"):
                     if group_name in line or group_id in line:
-                        cached = "יש מידע חלקי ב-GROUP_MEMORY.md אך אין הודעות שמורות מ-3 הימים האחרונים."
+                        cached = f"יש מידע חלקי ב-GROUP_MEMORY.md אך אין הודעות שמורות ב{range_label} האחרונים."
                         break
 
             final_text = (
-                f"בדקתי את {group_name}.\n"
-                f"{cached or 'אין הודעות שמורות מ-3 הימים האחרונים.'}\n\n"
-                "כדי לקבל עדכון עתידי — ודא שדבורה חברה בקבוצה "
-                f"(group_id: {group_id})."
+                f"אין הודעות שמורות מ{group_name} ב{range_label} האחרונים."
+                + (f"\n{cached}" if cached else "")
             )
         else:
             # Got messages — format as summary
@@ -220,6 +260,7 @@ class OdyaAgent(DomainAgent):
                     + "\n\nלא זיהיתי שיעורי בית ספציפיים."
                 )
 
+        messages_found = len([l for l in raw.split("\n") if l.strip()]) if raw and raw != "NO_MESSAGES_FOUND" else 0
         return FinalPayload(
             status="ok",
             agent=self.AGENT_NAME,
@@ -227,10 +268,16 @@ class OdyaAgent(DomainAgent):
             should_send=True,
             requires_approval=False,
             metadata={
-                "model_used":   "none",
-                "model_reason": f"group_retrieval/{group_name} — tier1",
-                "output_mode":  "direct_send",
-                "group_id":     group_id,
+                "model_used":            "none",
+                "model_reason":          f"group_retrieval/{group_name} — tier1",
+                "output_mode":           "direct_send",
+                # Traceability
+                "group_id":              group_id,
+                "group_name":            group_name,
+                "requested_time_range":  f"{requested_days}d",
+                "applied_time_range":    f"{requested_days}d",
+                "messages_found":        messages_found,
+                "source":                "group_messages.py",
             },
         )
 
