@@ -1,0 +1,174 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.23-2",
+    "lastTouchedAt": "2026-03-26T16:05:10.123Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-23T09:52:54.980Z",
+    "lastRunVersion": "2026.3.13",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "browser": {
+    "headless": true,
+    "profiles": {
+      "user": {
+        "cdpUrl": "http://localhost:9222",
+        "color": "#00AA00"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard",
+        "reserveTokensFloor": 24000,
+        "identifierPolicy": "strict",
+        "postCompactionSections": [
+          "Session Startup",
+          "Red Lines"
+        ],
+        "model": "anthropic/claude-sonnet-4-6",
+        "memoryFlush": {
+          "enabled": true,
+          "softThresholdTokens": 8000,
+          "prompt": "Write any lasting notes to memory/YYYY-MM-DD.md; reply with NO_REPLY if nothing to store.",
+          "systemPrompt": "Session nearing compaction. Store durable memories now."
+        }
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "model": "anthropic/claude-sonnet-4-6",
+        "heartbeat": {
+          "prompt": "Read HEARTBEAT.md if it exists (workspace context). Follow it strictly. Do not infer or repeat old tasks from prior chats. If nothing needs attention, reply HEARTBEAT_OK.\nWhen reading HEARTBEAT.md, use workspace file /home/jonia/.openclaw/workspace/HEARTBEAT.md (exact case). Do not read docs/heartbeat.md."
+        }
+      },
+      {
+        "id": "dana-fitness"
+      },
+      {
+        "id": "tali-marketing"
+      },
+      {
+        "id": "tzofit-research"
+      },
+      {
+        "id": "eti-automation"
+      },
+      {
+        "id": "odya-whatsapp"
+      },
+      {
+        "id": "masha"
+      }
+    ]
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "provider": "brave"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "type": "route",
+      "agentId": "main",
+      "match": {
+        "channel": "whatsapp",
+        "accountId": "default"
+      }
+    }
+  ],
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "groupAllowFrom": [
+        "*"
+      ],
+      "groupPolicy": "allowlist",
+      "groups": {
+        "120363424251939547@g.us": {
+          "requireMention": true
+        },
+        "120363425514726135@g.us": {
+          "requireMention": false
+        },
+        "120363425249923804@g.us": {
+          "requireMention": true
+        },
+        "120363303184821917@g.us": {
+          "requireMention": true
+        },
+        "120363418497534459@g.us": {
+          "requireMention": true
+        },
+        "120363425303557348@g.us": {
+          "requireMention": true
+        }
+      },
+      "debounceMs": 0,
+      "mediaMaxMb": 50
+    },
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "botToken": "8704690302:AAEDZWvJJYBxHdXevaVtDGs_iJWTqrEI72k",
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "2869ccf8a61f157c36e0046129b3a2457b0a941da3a70abd"
+    }
+  },
+  "plugins": {
+    "load": {
+      "paths": [
+        "/home/jonia/.npm-global/lib/node_modules/openclaw/dist/extensions/whatsapp"
+      ]
+    },
+    "entries": {
+      "tavily": {
+        "enabled": true,
+        "config": {
+          "webSearch": {
+            "apiKey": "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"
+          }
+        }
+      },
+      "brave": {
+        "enabled": true,
+        "config": {
+          "webSearch": {
+            "apiKey": "BSAC7Z0sKLWswYjh9a0IOQ_OoapDwxh"
+          }
+        }
+      },
+      "whatsapp": {
+        "enabled": true
+      }
+    },
+    "installs": {
+      "whatsapp": {
+        "source": "path",
+        "spec": "whatsapp",
+        "sourcePath": "/home/jonia/.npm-global/lib/node_modules/openclaw/dist/extensions/whatsapp",
+        "installPath": "/home/jonia/.npm-global/lib/node_modules/openclaw/dist/extensions/whatsapp",
+        "installedAt": "2026-03-24T05:12:06.283Z"
+      }
+    }
+  }
+}
