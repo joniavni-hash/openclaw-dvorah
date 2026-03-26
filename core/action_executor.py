@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 try:
-    from output_sanitizer import sanitize as _sanitize, enforce_single_message as _enforce_single
+    from output_sanitizer import shape_final_response as _shape
 except ImportError:
     def _sanitize(text): return text  # fallback
 
@@ -130,11 +130,10 @@ class ActionExecutor:
         
         # Prepare response text (pass agent_result for footer)
         agent_result = getattr(self, '_last_agent_result', {})
-        raw_text = _sanitize(self._prepare_response_text(execution_result, agent_result))
-        # Enforce single-message discipline — stay under WhatsApp 4000-char chunk limit
-        domain = getattr(agent_result, "get", lambda k, d=None: d)("domain", "")
+        raw_text = self._prepare_response_text(execution_result, agent_result)
+        domain = agent_result.get("domain", "") if isinstance(agent_result, dict) else ""
         mode = "analysis" if domain in ("legal", "research") else "default"
-        response_text = _enforce_single(raw_text, mode=mode)
+        response_text = _shape(raw_text, mode=mode)
         
         if not response_text:
             return {

@@ -175,3 +175,65 @@ def enforce_single_message(text: str, mode: str = "default") -> str:
     if footer:
         result = result + "\n\n" + footer
     return result
+
+
+# ── Process spam filter ───────────────────────────────────────────────────────
+
+import re as _re
+
+_PROCESS_SPAM_PATTERNS = [
+    # Hebrew process narration
+    r'^עכשיו אני[^\n]*\n?',
+    r'^הנה מה שמצאתי[^\n]*\n?',
+    r'^בוא נבדוק[^\n]*\n?',
+    r'^אני אעשה[^\n]*\n?',
+    r'^ממשיך ל[^\n]*\n?',
+    r'^מריץ[^\n]*\n?',
+    r'^בודק[^\n]*\n?',
+    r'^טוען[^\n]*\n?',
+    r'^שולף[^\n]*\n?',
+    r'^כרגע אני[^\n]*\n?',
+    # English process narration
+    r'(?m)^Now I\'m[^\n]*\n?',
+    r'(?m)^Let me check[^\n]*\n?',
+    r'(?m)^I\'m checking[^\n]*\n?',
+    r'(?m)^Running[^\n]*\n?',
+    r'(?m)^Loading[^\n]*\n?',
+    # Stage headers that are process not answer
+    r'(?m)^\*?Diagnosis\*?:[^\n]*\n?',
+    r'(?m)^\*?Implementation\*?:[^\n]*\n?',
+    r'(?m)^\*?Proof\*?:[^\n]*\n?',
+    r'(?m)^---+\s*\n',
+]
+
+_PROCESS_SPAM_COMPILED = [_re.compile(p, _re.IGNORECASE | _re.MULTILINE)
+                           for p in _PROCESS_SPAM_PATTERNS]
+
+
+def strip_process_spam(text: str) -> str:
+    """Remove process narration patterns from user-facing text."""
+    if not text:
+        return text
+    for pattern in _PROCESS_SPAM_COMPILED:
+        text = pattern.sub('', text)
+    # Collapse 3+ blank lines
+    text = _re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+def shape_final_response(text: str, mode: str = "default") -> str:
+    """
+    Full output contract enforcement pipeline:
+    1. Sanitize internal content
+    2. Strip process spam
+    3. Enforce single-message length
+    Returns one clean, direct message.
+
+    mode: "default" | "group" | "analysis"
+    """
+    if not text:
+        return text
+    text = sanitize(text)
+    text = strip_process_spam(text)
+    text = enforce_single_message(text, mode="analysis" if mode == "analysis" else "default")
+    return text
