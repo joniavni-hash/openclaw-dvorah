@@ -73,7 +73,8 @@ class ExecutionPipeline:
             is_no_reply = routing_result.get("routing_decision", {}).get("action") == "no_reply"
             model_decision = select_model({
                 "domain":           routing_result["classification"]["domain"],
-                "recommended_tier": routing_result.get("model", "tier2"),
+                "recommended_tier": routing_result.get("recommended_tier",
+                                       routing_result.get("model", "tier2")),
                 "no_reply":         is_no_reply,
             })
             # Inject enforced model into routing_result so agents receive it

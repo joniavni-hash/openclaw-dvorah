@@ -244,7 +244,9 @@ class Router:
         return {
             "classification": classification,
             "context": context,
-            "model": recommended_tier,   # recommendation only, overridden by model_selector
+            # ADVISORY ONLY — model_selector (core/model_selector.py) makes the final decision
+            "model":            recommended_tier,
+            "recommended_tier": recommended_tier,
             "routing_decision": {
                 "action": "route_to_agent" if classification["agent"] != "direct" else "handle_direct",
                 "agent": classification["agent"],
