@@ -7,9 +7,17 @@ Only executes after QA approval to prevent unintended actions.
 
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    from output_sanitizer import sanitize as _sanitize
+except ImportError:
+    def _sanitize(text): return text  # fallback
+
 
 class ActionExecutor:
     def __init__(self, workspace_path: str = None):
@@ -122,7 +130,7 @@ class ActionExecutor:
         
         # Prepare response text (pass agent_result for footer)
         agent_result = getattr(self, '_last_agent_result', {})
-        response_text = self._prepare_response_text(execution_result, agent_result)
+        response_text = _sanitize(self._prepare_response_text(execution_result, agent_result))
         
         if not response_text:
             return {
