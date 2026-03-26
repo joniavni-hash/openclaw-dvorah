@@ -13,6 +13,24 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+# Model short names for footer transparency
+_TIER_MODEL = {
+    "tier1": ("anthropic/claude-sonnet-4-6",  "sonnet", "cheap/fast"),
+    "tier2": ("anthropic/claude-sonnet-4-6",  "sonnet", "default"),
+    "tier3": ("anthropic/claude-opus-4-6",    "opus",   "premium/legal"),
+}
+
+def _meta(tier: str, specialization: str) -> dict:
+    model_id, _, reason = _TIER_MODEL.get(tier, _TIER_MODEL["tier2"])
+    return {
+        "model_tier": tier,
+        "model_used": model_id,
+        "model_reason": reason,
+        "output_mode": "single_message",
+        "specialization": specialization,
+    }
+
+
 class AgentExecutor:
     def __init__(self, workspace_path: str = None):
         self.workspace = Path(workspace_path or os.environ.get("DVORAH_WORKSPACE", 
@@ -127,10 +145,7 @@ class AgentExecutor:
                 "approval_reason": "Legal content requires manual review before sending",
                 "action": "legal_review",
             },
-            "metadata": {
-                "model_tier": routing_result.get("model", "tier2"),
-                "specialization": "legal_analysis",
-            },
+            "metadata": _meta(routing_result.get("model", "tier2"), "legal_analysis"),
         }
 
     def _handle_dana(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
@@ -152,10 +167,7 @@ class AgentExecutor:
                 "data_logged": True,
                 "action_taken": result.get("action", "log_entry"),
                 "file_updated": result.get("file_updated"),
-                "metadata": {
-                    "model_tier": routing_result.get("model", "tier1"),
-                    "specialization": "nutrition_tracking",
-                },
+                "metadata": _meta(routing_result.get("model", "tier1"), "nutrition_tracking"),
             }
         except Exception as e:
             return {
@@ -189,10 +201,7 @@ class AgentExecutor:
                 "query": message[:100],
                 "action": "conduct_research",
             },
-            "metadata": {
-                "model_tier": routing_result.get("model", "tier2"),
-                "specialization": "information_gathering",
-            },
+            "metadata": _meta(routing_result.get("model", "tier2"), "information_gathering"),
         }
 
     def _handle_tali(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
@@ -209,10 +218,7 @@ class AgentExecutor:
                 "approval_reason": "Marketing content requires review before publishing",
                 "action": "create_content",
             },
-            "metadata": {
-                "model_tier": routing_result.get("model", "tier2"),
-                "specialization": "content_creation",
-            },
+            "metadata": _meta(routing_result.get("model", "tier2"), "content_creation"),
         }
 
     def _handle_eti(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
@@ -228,10 +234,7 @@ class AgentExecutor:
             "analysis": {
                 "action": "system_check",
             },
-            "metadata": {
-                "model_tier": routing_result.get("model", "tier1"),
-                "specialization": "system_automation",
-            },
+            "metadata": _meta(routing_result.get("model", "tier1"), "system_automation"),
         }
 
 

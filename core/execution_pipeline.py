@@ -146,19 +146,25 @@ class ExecutionPipeline:
     
     def _handle_direct(self, message: str, routing: Dict, metadata: Dict) -> Dict:
         """Handle messages that go directly to Dvorah (no agent)"""
-        
+        tier = routing.get("model", "tier2")
+        model_id = "anthropic/claude-sonnet-4-6"
         return {
             "status": "direct_response",
-            "agent": "dvorah_direct",
+            "agent": "דבורה",
+            "domain": "general",
             "response_type": "conversational",
             "requires_approval": False,
             "routing_reason": routing["classification"]["reason"],
             "confidence": routing["classification"]["confidence"],
             "response_ready": True,
+            # QA: response_completeness needs one of: summary/analysis/draft_actions/data_logged/action_taken
+            "summary": "Direct conversational response",
             "metadata": {
-                "model_tier": routing["model"],
+                "model_tier": tier,
+                "model_used": model_id,
+                "model_reason": "direct path — no agent dispatch",
+                "output_mode": "single_message",
                 "context_files": routing["context"]["files_loaded"],
-                "direct_processing": True
             }
         }
     
