@@ -104,3 +104,18 @@ def sanitize(text: str) -> str:
 def is_clean(text: str) -> bool:
     """Returns True if text passes sanitization unchanged."""
     return sanitize(text) == text
+
+
+# Cyrillic / other unexpected scripts — flag if primary content is not Hebrew/Latin/Arabic numerals
+_UNEXPECTED_SCRIPTS = [
+    re.compile(r'[\u0400-\u04FF]{4,}'),   # Cyrillic
+    re.compile(r'[\u4E00-\u9FFF]{4,}'),   # CJK
+    re.compile(r'[\u0900-\u097F]{4,}'),   # Devanagari
+]
+
+def has_unexpected_language(text: str) -> bool:
+    """Returns True if text contains unexpected non-Hebrew/non-Latin script blocks."""
+    for pattern in _UNEXPECTED_SCRIPTS:
+        if pattern.search(text):
+            return True
+    return False
