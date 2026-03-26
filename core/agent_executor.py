@@ -170,6 +170,9 @@ class AgentExecutor:
                 "metadata": _meta(routing_result.get("model", "tier1"), "nutrition_tracking"),
             }
         except Exception as e:
+            tier = routing_result.get("model", "tier1")
+            m = _meta(tier, "nutrition_tracking")
+            m["error"] = str(e)
             return {
                 "status": "executed",
                 "agent": "דנה",
@@ -180,11 +183,7 @@ class AgentExecutor:
                 "summary": f"Fitness message received (processing pending): {message[:60]}",
                 "data_logged": True,
                 "action_taken": "queued",
-                "metadata": {
-                    "model_tier": routing_result.get("model", "tier1"),
-                    "specialization": "nutrition_tracking",
-                    "error": str(e),
-                },
+                "metadata": m,
             }
 
     def _handle_tzofit(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
