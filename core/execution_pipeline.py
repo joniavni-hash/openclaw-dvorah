@@ -8,6 +8,8 @@ Ensures consistent execution with overflow protection.
 
 import json
 import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -16,6 +18,31 @@ from router import route_message
 from context_guard import context_status, emergency_compact
 from agent_executor import AgentExecutor
 from action_executor import execute_if_approved, send_response_if_ready
+
+# Feature flag — set AUTO_GIT_PUSH_ENABLED=false to disable
+AUTO_GIT_PUSH_ENABLED = os.environ.get("AUTO_GIT_PUSH_ENABLED", "true").lower() != "false"
+AUTO_GIT_PUSH_STATUSES = {"completed", "draft_completed", "no_response_needed"}
+_GIT_SYNC = Path(__file__).resolve().parent.parent / "scripts" / "git_sync.py"
+
+
+def _auto_git_push(execution_id: str) -> None:
+    """Fire-and-forget git sync. Logs error but never raises."""
+    if not AUTO_GIT_PUSH_ENABLED:
+        return
+    if not _GIT_SYNC.exists():
+        return
+    try:
+        msg = f"auto: task {execution_id} {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        result = subprocess.run(
+            [sys.executable, str(_GIT_SYNC), "-m", msg],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode != 0:
+            print(f"[git_sync] push failed: {result.stderr.strip()}", file=sys.stderr)
+        elif result.stdout.strip():
+            print(f"[git_sync] {result.stdout.strip()}", file=sys.stderr)
+    except Exception as e:
+        print(f"[git_sync] exception: {e}", file=sys.stderr)
 
 class ExecutionPipeline:
     def __init__(self, workspace_path: str = None):
@@ -80,7 +107,12 @@ class ExecutionPipeline:
             }
             
             self._log_execution(execution_record)
-            
+
+            # Step 8: Auto git push — only on successful task completion
+            exec_status = execution_result.get("status", "")
+            if exec_status in AUTO_GIT_PUSH_STATUSES:
+                _auto_git_push(execution_id)
+
             return {
                 "status": "success",
                 "execution_id": execution_id,
