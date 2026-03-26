@@ -41,6 +41,8 @@ class ActionExecutor:
                 "next_step": "Manual review and approval needed before execution"
             }
         
+        # Store for footer use
+        self._last_agent_result = agent_result
         # Execute approved actions
         return self._execute_action(agent_result, original_channel)
     
@@ -111,8 +113,9 @@ class ActionExecutor:
                 "reason": f"Execution status: {execution_result['status']}"
             }
         
-        # Prepare response text
-        response_text = self._prepare_response_text(execution_result)
+        # Prepare response text (pass agent_result for footer)
+        agent_result = getattr(self, '_last_agent_result', {})
+        response_text = self._prepare_response_text(execution_result, agent_result)
         
         if not response_text:
             return {
@@ -132,25 +135,57 @@ class ActionExecutor:
                 "note": "Response prepared but no valid channel/sender"
             }
     
-    def _prepare_response_text(self, execution_result: Dict) -> str:
-        """Prepare response text from execution result"""
-        
+    def _prepare_response_text(self, execution_result: Dict, agent_result: Dict = None) -> str:
+        """Prepare response text from execution result, with transparency footer."""
+
         action = execution_result.get("action", "")
-        
+
         if action == "fitness_data_logged":
-            return execution_result.get("details", "✅ נתונים נרשמו במעקב הכושר")
-        
+            text = execution_result.get("details", "✅ נתונים נרשמו במעקב הכושר")
         elif action == "legal_analysis_ready":
-            return "⚖️ הניתוח המשפטי הושלם ומחכה לבדיקתך"
-        
-        elif action == "group_response_suggested":
-            return ""  # Group responses need manual crafting
-        
-        elif action == "direct_response":
-            return ""  # Direct responses handled elsewhere
-        
+            text = "⚖️ הניתוח המשפטי הושלם ומחכה לבדיקתך"
+        elif action in ("group_response_suggested", "direct_response"):
+            return ""
         else:
             return ""
+
+        # Transparency footer — appended to every non-empty response
+        if text and agent_result:
+            footer = self._build_footer(agent_result, execution_result)
+            if footer:
+                text = f"{text}\n\n{footer}"
+
+        return text
+
+    def _build_footer(self, agent_result: Dict, execution_result: Dict) -> str:
+        """Build short transparency footer. Returns '' for no_reply / empty."""
+        agent = agent_result.get("agent", "")
+        if not agent:
+            return ""
+
+        # model_used — from FinalPayload metadata or legacy fields
+        metadata = agent_result.get("metadata", {})
+        model_used = metadata.get("model_used", agent_result.get("execution_details", {}).get("model_used", ""))
+        # Shorten model id: anthropic/claude-sonnet-4-20250514 → sonnet
+        if "opus" in model_used:
+            model_short = "opus"
+        elif "sonnet" in model_used:
+            model_short = "sonnet"
+        elif "haiku" in model_used:
+            model_short = "haiku"
+        else:
+            model_short = model_used.split("/")[-1] if "/" in model_used else model_used or "—"
+
+        status = execution_result.get("status", "")
+        status_map = {
+            "completed":           "נשלח",
+            "draft_completed":     "טיוטה מוכנה",
+            "response_recommended": "ממתין לאישור",
+            "pending_approval":    "ממתין לאישור",
+        }
+        status_label = status_map.get(status, status)
+
+        return f"_{agent} · {model_short} · {status_label}_"
     
     def _send_whatsapp_response(self, text: str, target: str) -> Dict:
         """Send WhatsApp response via message tool"""
