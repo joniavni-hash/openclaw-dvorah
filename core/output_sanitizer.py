@@ -119,3 +119,59 @@ def has_unexpected_language(text: str) -> bool:
         if pattern.search(text):
             return True
     return False
+
+
+# ── Single-message enforcement ────────────────────────────────────────────────
+
+MAX_CHARS_DEFAULT = 3500   # Stay under 4000-char WhatsApp chunk limit
+MAX_CHARS_ANALYSIS = 5000  # For analysis/research/legal — still single chunk if possible
+
+def enforce_single_message(text: str, mode: str = "default") -> str:
+    """
+    Enforce single-message output discipline.
+
+    - If text is within limit: return as-is.
+    - If over limit: truncate to last sentence boundary + add truncation note.
+    - Never splits into multiple messages — caller gets ONE string.
+    - mode: "default" (3500 chars) | "analysis" (5000 chars)
+    """
+    if not text:
+        return text
+
+    limit = MAX_CHARS_ANALYSIS if mode == "analysis" else MAX_CHARS_DEFAULT
+
+    if len(text) <= limit:
+        return text
+
+    # Separate footer before truncating
+    lines = text.split("\n")
+    footer = ""
+    body_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("_") and stripped.endswith("_") and " · " in stripped:
+            footer = line
+        else:
+            body_lines.append(line)
+
+    body = "\n".join(body_lines)
+
+    # Truncate to limit minus room for note + footer
+    reserve = len(footer) + 60
+    truncate_at = limit - reserve
+
+    if len(body) <= truncate_at:
+        truncated = body
+    else:
+        # Find last sentence boundary before truncate_at
+        chunk = body[:truncate_at]
+        last_period = max(chunk.rfind(". "), chunk.rfind(".\n"), chunk.rfind("? "), chunk.rfind("! "))
+        if last_period > truncate_at * 0.6:
+            truncated = body[:last_period + 1]
+        else:
+            truncated = chunk.rstrip() + "..."
+
+    result = truncated.rstrip()
+    if footer:
+        result = result + "\n\n" + footer
+    return result
