@@ -107,8 +107,12 @@ class OdyaAgent(DomainAgent):
         self._start_timer()
 
         # ── Group retrieval path (DM asking about a group) ────────────────────
+        # domain may be at root of context OR nested inside routing.classification
         routing = context.get("routing", {})
-        domain = routing.get("classification", {}).get("domain", "")
+        domain = (
+            context.get("domain")
+            or routing.get("classification", {}).get("domain", "")
+        )
         if domain == "group_retrieval":
             return self._execute_group_retrieval(message, context)
 
