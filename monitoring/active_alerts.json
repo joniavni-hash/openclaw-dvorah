@@ -38,5 +38,25 @@
     ],
     "confidence_score": 1.0,
     "dismissed": false
+  },
+  {
+    "id": "high_value_investment_1774506696",
+    "alert_type": "opportunity",
+    "title": "High-Value Investment Opportunity Detected",
+    "description": "$2100.0M funding opportunity. Source: $2.1B Funding Round for AI Infrastructure Startup",
+    "urgency": "high",
+    "source": "Monitor rule: High Value Investment Opportunity",
+    "created_at": "2026-03-26T08:31:36.984659",
+    "expires_at": "2026-04-02T08:31:36.984659",
+    "related_entities": [
+      "ai_trends_daily"
+    ],
+    "actionable_items": [
+      "Research company background",
+      "Analyze market opportunity",
+      "Schedule due diligence call"
+    ],
+    "confidence_score": 1.0,
+    "dismissed": false
   }
 ]
