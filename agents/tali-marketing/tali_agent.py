@@ -22,6 +22,7 @@ from domain_agent_base import (
 from analytics_reader import AnalyticsReader
 from asset_manager import AssetManager
 from publishing_client import PublishingClient
+from creative_qa import CreativeQA
 
 LARRY_SYSTEM = WORKSPACE / "villa-lithos-tiktok" / "larry-system"
 MARKETING_ROOT = WORKSPACE / "villa-lithos"
@@ -66,6 +67,7 @@ class TaliAgent(DomainAgent):
         self.analytics = AnalyticsReader()
         self.asset_manager = AssetManager()
         self.publisher = PublishingClient()
+        self.creative_qa = CreativeQA()
 
     def can_handle(self, message: str, context: Dict, attachments: List[str] = None) -> RoutingResult:
         score = self.keyword_match(message)
@@ -92,6 +94,16 @@ class TaliAgent(DomainAgent):
         platform = self._extract_platform(message.lower()) or context.get("platform", "general")
 
         final_text, output_mode = self._build_response(task_type, message, platform, context)
+
+        # Creative QA review
+        asset_name = context.get("asset", "") or "general_asset"
+        pillar = context.get("pillar", "visual_escape")
+        creative_review = self._run_creative_review(asset_name, final_text, platform, pillar)
+
+        if creative_review["publish_decision"] == "reject":
+            final_text = f"🚫 Post rejected — {creative_review['improvement_reason']}"
+        elif creative_review["publish_decision"] == "needs_improvement":
+            final_text += f"\n\n⚠️ Quality note: {creative_review['improvement_reason']}"
 
         is_autonomous = task_type == "autonomous_routine"
         approval_required = task_type in {"schedule_post", "campaign_plan"}
@@ -121,8 +133,18 @@ class TaliAgent(DomainAgent):
                 "external_action_result": "local_draft" if task_type in {"publish_draft", "schedule_post", "autonomous_routine"} else None,
                 "autonomous_mode": is_autonomous,
                 "routine_vs_high_risk": routine_vs_high_risk,
+                "creative_review_passed": creative_review["passed"],
+                "visual_score": round(creative_review["visual_score"], 2),
+                "copy_score": round(creative_review["copy_score"], 2),
+                "fit_score": round(creative_review["fit_score"], 2),
+                "brand_score": round(creative_review["brand_score"], 2),
+                "publish_decision": creative_review["publish_decision"],
+                "improvement_reason": creative_review["improvement_reason"],
             }
         )
+
+    def _run_creative_review(self, asset_name: str, copy: str, platform: str, pillar: str) -> dict:
+        return self.creative_qa.review(asset_name, copy, platform, pillar)
 
     # ── v1 process: Larry prompt builder (backward compat) ────────────
 
