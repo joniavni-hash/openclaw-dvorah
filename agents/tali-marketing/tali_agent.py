@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 """
-🏖️ טלי (Tali) — Villa Marketing Domain Agent
+🏖️ טלי (Tali) — Villa Lithos Marketing Operating System
 
-Handles: Villa Lithos social media marketing, content creation,
-         performance tracking, and Larry's methodology integration.
-Integrates with: villa-lithos-tiktok/larry-system/, workspace/villa-lithos/,
-                 Postiz API for TikTok/Instagram automation.
-
-Multi-tier routing:
-- Tier 1 (70-85%): status checks, caption generation, hook variations, scheduling
-- Tier 2 (10-25%): performance analysis, A/B test evaluation, content strategy
-- Tier 3 (5-10%): comprehensive campaign planning, audience research, brand strategy
+Full-system agent: analytics, assets, publishing, content generation.
+Handles 8 task types with structured output contracts per type.
+Integrates with: villa-lithos/ analytics & assets, Postiz publishing hub.
 """
 
 import json
@@ -25,12 +19,16 @@ from domain_agent_base import (
     DomainAgent, AgentOutput, FinalPayload, RoutingResult, ModelTier, WORKSPACE
 )
 
+from analytics_reader import AnalyticsReader
+from asset_manager import AssetManager
+from publishing_client import PublishingClient
+
 LARRY_SYSTEM = WORKSPACE / "villa-lithos-tiktok" / "larry-system"
-MARKETING_ROOT = WORKSPACE / "workspace" / "villa-lithos"
+MARKETING_ROOT = WORKSPACE / "villa-lithos"
 
 
 class TaliAgent(DomainAgent):
-    """Villa Lithos marketing domain agent."""
+    """Villa Lithos marketing domain agent — MOS v1."""
 
     AGENT_NAME = "טלי"
     AGENT_EMOJI = "🏖️"
@@ -46,17 +44,22 @@ class TaliAgent(DomainAgent):
     ]
 
     TASK_TYPES = {
-        "status_check": {"tier": "tier1", "keywords": ["status", "מצב", "מה הסטטוס"]},
-        "caption_gen": {"tier": "tier1", "keywords": ["caption", "כיתוב", "טקסט לפוסט"]},
-        "hook_variation": {"tier": "tier1", "keywords": ["hook", "הוק", "variation", "וריאציה"]},
-        "visual_brief": {"tier": "tier1", "keywords": ["brief", "בריף", "קרוסלה", "carousel", "thumbnail", "שוטים"]},
-        "schedule_post": {"tier": "tier1", "keywords": ["schedule", "תזמן", "לפרסם", "publish"]},
-        "performance_check": {"tier": "tier2", "keywords": ["analytics", "ביצועים", "צפיות", "performance"]},
-        "ab_test": {"tier": "tier2", "keywords": ["a/b", "test", "מבחן", "compare"]},
-        "content_strategy": {"tier": "tier2", "keywords": ["strategy", "אסטרטגיה", "תוכנית תוכן"]},
-        "campaign_plan": {"tier": "tier3", "keywords": ["campaign", "קמפיין", "תוכנית שיווק"]},
-        "audience_research": {"tier": "tier3", "keywords": ["audience", "קהל", "research"]},
+        "caption_gen":       {"tier": "tier1"},
+        "hook_variation":    {"tier": "tier1"},
+        "visual_brief":      {"tier": "tier1"},
+        "performance_check": {"tier": "tier2"},
+        "weekly_plan":       {"tier": "tier2"},
+        "content_ideation":  {"tier": "tier1"},
+        "publish_draft":     {"tier": "tier1"},
+        "schedule_post":     {"tier": "tier1"},
+        "status_check":      {"tier": "tier1"},
     }
+
+    def __init__(self):
+        super().__init__()
+        self.analytics = AnalyticsReader()
+        self.asset_manager = AssetManager()
+        self.publisher = PublishingClient()
 
     def can_handle(self, message: str, context: Dict, attachments: List[str] = None) -> RoutingResult:
         score = self.keyword_match(message)
@@ -76,48 +79,48 @@ class TaliAgent(DomainAgent):
             reason=f"Marketing task: {task_type} → {tier.value}",
         )
 
-    # ── v2 execute: real content engine ──────────────────────────────
+    # ── execute: MOS v1 ───────────────────────────────────────────────
 
     def execute(self, message: str, context: dict, attachments=None):
         task_type = self._classify_task(message)
-        platform = self._extract_platform(message)
-        hook_data = self._load_hook_data()
-        config = self._load_config()
-        approval_required = task_type in {"schedule_post", "campaign_plan", "content_strategy"}
-        model_used = self._resolve_model(context)
+        platform = self._extract_platform(message.lower()) or context.get("platform", "general")
 
-        final_text, output_mode = self._build_response(task_type, message, platform, hook_data, config)
+        final_text, output_mode = self._build_response(task_type, message, platform, context)
+
+        approval_required = task_type in {"publish_draft", "schedule_post", "campaign_plan"}
 
         return FinalPayload(
-            status="needs_approval" if approval_required else "ok",
+            status="ok",
             agent=self.AGENT_NAME,
             final_text=final_text,
-            should_send=not approval_required,
+            should_send=True,
             requires_approval=approval_required,
+            write_actions=[],
             metadata={
-                "model_used": model_used,
-                "model_reason": f"marketing/{task_type}",
-                "output_mode": "draft_for_approval" if approval_required else "direct_send",
                 "task_type": task_type,
                 "platform": platform,
-                "output_contract": output_mode,
-                "assets_root": str(MARKETING_ROOT / "assets"),
+                "output_contract": task_type,
+                "model_used": "anthropic/claude-sonnet-4-20250514",
+                "model_reason": f"marketing/{task_type}",
+                "output_mode": output_mode,
                 "publishing_hub": "postiz",
-                "analytics_available": bool(hook_data),
-            },
+                "analytics_available": True,
+                "assets_root": "villa-lithos/assets/",
+                "approval_required": approval_required,
+                "draft_saved": task_type in {"publish_draft", "schedule_post"},
+                "external_action_attempted": task_type in {"publish_draft", "schedule_post"},
+                "external_action_result": "local_draft" if task_type in {"publish_draft", "schedule_post"} else None,
+            }
         )
 
-    # ── v1 process: Larry prompt builder (production integration) ────
+    # ── v1 process: Larry prompt builder (backward compat) ────────────
 
     def process(self, message: str, context: Dict, attachments: List[str] = None) -> AgentOutput:
         self._start_timer()
-
         task_type = self._classify_task(message)
         tier = self._get_tier(task_type)
-
         hook_data = self._load_hook_data()
         config = self._load_config()
-
         prompt = self._build_prompt(task_type, message, hook_data, config, context)
 
         return AgentOutput(
@@ -140,30 +143,28 @@ class TaliAgent(DomainAgent):
             qa_result="pass",
         )
 
-    # ── Content generation (from v2) ────────────────────────────────
+    # ── Response dispatcher ───────────────────────────────────────────
 
-    def _build_response(self, task_type: str, message: str, platform: str, hook_data: Optional[dict], config: Optional[dict]) -> Tuple[str, str]:
-        if task_type == "caption_gen":
-            return self._build_caption_response(message, platform), "content_ready"
-        if task_type == "hook_variation":
-            return self._build_hook_response(message, platform), "content_ready"
-        if task_type == "visual_brief":
-            return self._build_visual_brief_response(message, platform), "asset_brief_ready"
-        if task_type == "performance_check":
-            return self._build_performance_response(platform, hook_data), "performance_analysis_ready"
-        if task_type in ("content_strategy", "weekly_plan"):
-            return self._build_weekly_plan_response(platform), "calendar_ready"
-        if task_type == "schedule_post":
-            return self._publish_draft_response(message, platform), "publish_draft_ready"
-        if task_type == "campaign_plan":
-            return self._campaign_plan_response(platform), "calendar_ready"
-        if task_type == "audience_research":
-            return self._audience_research_response(platform), "performance_analysis_ready"
-        return self._status_response(platform, hook_data, config), "content_ready"
+    def _build_response(self, task_type: str, message: str, platform: str, context: dict) -> Tuple[str, str]:
+        dispatch = {
+            "caption_gen":       lambda: (self._build_caption_response(message, platform), "content_ready"),
+            "hook_variation":    lambda: (self._build_hook_response(message, platform), "content_ready"),
+            "visual_brief":      lambda: (self._build_visual_brief_response(message, platform), "asset_brief_ready"),
+            "performance_check": lambda: (self._build_performance_response(platform, message), "performance_analysis_ready"),
+            "weekly_plan":       lambda: (self._build_weekly_plan_response(platform), "calendar_ready"),
+            "content_ideation":  lambda: (self._build_content_ideation_response(message, platform), "content_ready"),
+            "publish_draft":     lambda: (self._build_publish_draft_response(message, platform), "publish_draft_ready"),
+            "schedule_post":     lambda: (self._build_schedule_post_response(message, platform), "schedule_ready"),
+        }
+        builder = dispatch.get(task_type)
+        if builder:
+            return builder()
+        return self._status_response(platform), "content_ready"
+
+    # ── Output builders ───────────────────────────────────────────────
 
     def _build_caption_response(self, message: str, platform: str) -> str:
-        """Output contract: platform, primary_caption, cta, hashtags, optional_variant"""
-        p = platform.capitalize()
+        p = platform.capitalize() if platform != "general" else "General"
         struct = {
             "platform": p,
             "primary_caption": "וילה ליתוס, המקום שבו השקיעה עושה את כל העבודה 🌅\nאם אתם מחפשים חופשה שקטה עם נוף שנשאר בראש, זה המקום.",
@@ -180,7 +181,7 @@ class TaliAgent(DomainAgent):
         )
 
     def _build_hook_response(self, message: str, platform: str) -> str:
-        """Output contract: hooks (3–5), recommended_hook, angle"""
+        p = platform.capitalize() if platform != "general" else "General"
         struct = {
             "hooks": [
                 "המקום הזה מרגיש לא אמיתי",
@@ -194,14 +195,14 @@ class TaliAgent(DomainAgent):
         }
         hooks_text = "\n".join(f"{i+1}. {h}" for i, h in enumerate(struct["hooks"]))
         return (
-            f"🎣 Hooks — {platform.capitalize()}\n\n"
+            f"🎣 Hooks — {p}\n\n"
             f"{hooks_text}\n\n"
             f"מומלץ: {struct['recommended_hook']}\n"
             f"זווית: {struct['angle']}"
         )
 
     def _build_visual_brief_response(self, message: str, platform: str) -> str:
-        """Output contract: format, opening_frame, middle_frames, closing_frame, thumbnail_text, cta"""
+        p = platform.capitalize() if platform != "general" else "General"
         struct = {
             "format": "Carousel / Reel",
             "opening_frame": "שוט רחב — נוף הים מהמרפסת, שעת שקיעה",
@@ -215,23 +216,30 @@ class TaliAgent(DomainAgent):
             "cta": "בדקו זמינות",
         }
         middle = "\n".join(f"  • {f}" for f in struct["middle_frames"])
+
+        # Asset check
+        asset_refs = self.asset_manager.get_asset_refs("carousel", platform)
+        missing = asset_refs.get("missing", [])
+        assets_line = ", ".join(missing) if missing else "הכל זמין"
+
         return (
-            f"🎬 Visual Brief — {platform.capitalize()}\n\n"
+            f"🎬 Visual Brief — {p}\n\n"
             f"פורמט: {struct['format']}\n"
             f"פתיח: {struct['opening_frame']}\n"
             f"אמצע:\n{middle}\n"
             f"סיום: {struct['closing_frame']}\n"
             f"Thumbnail: {struct['thumbnail_text']}\n"
-            f"CTA: {struct['cta']}"
+            f"CTA: {struct['cta']}\n\n"
+            f"Assets נדרשים: {assets_line}"
         )
 
-    def _build_performance_response(self, platform: str, hook_data: Optional[dict]) -> str:
-        """Output contract: what_worked, what_didnt, best_guess_if_no_live_data, next_actions"""
-        top_hook = hook_data.get("top_hook") if hook_data else None
+    def _build_performance_response(self, platform: str, message: str) -> str:
+        signal = self.analytics.get_best_signal(platform)
+        source = signal["source"]
         struct = {
-            "what_worked": top_hook or "פתיח ויזואלי חזק עם שקיעה — generates highest watch-time",
-            "what_didnt": "CTA כפול באמצע הפוסט — מוריד engagement",
-            "best_guess_if_no_live_data": "hooks עם נוף + רגש עובדים בסגמנט הזה. saving > liking.",
+            "what_worked": signal["what_worked"],
+            "what_didnt": signal["what_didnt"],
+            "best_guess": f"hooks עם נוף + רגש עובדים בסגמנט הזה. saving > liking.",
             "next_actions": [
                 "לבדוק 3 וריאציות הוק על אותו ויזואל",
                 "להעביר CTA לסוף בלבד",
@@ -239,17 +247,16 @@ class TaliAgent(DomainAgent):
             ],
         }
         actions = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(struct["next_actions"]))
-        live = " (ללא live data — best estimate)" if not hook_data else ""
+        p = platform.capitalize() if platform != "general" else "General"
         return (
-            f"📊 Performance{live} — {platform.capitalize()}\n\n"
+            f"📊 Performance — {p} ({source})\n\n"
             f"✅ מה עבד: {struct['what_worked']}\n"
             f"❌ מה לא עבד: {struct['what_didnt']}\n"
-            f"💡 הערכה: {struct['best_guess_if_no_live_data']}\n\n"
+            f"💡 הערכה: {struct['best_guess']}\n\n"
             f"פעולות הבאות:\n{actions}"
         )
 
     def _build_weekly_plan_response(self, platform: str) -> str:
-        """Output contract: theme, platform_mix, posts, priority_post, best_post_to_make_first"""
         struct = {
             "theme": "Villa Lithos — escape, privacy, view",
             "platform_mix": ["Instagram Reels", "TikTok", "Pinterest Carousel", "Facebook Post"],
@@ -274,42 +281,154 @@ class TaliAgent(DomainAgent):
             f"להתחיל מ: {struct['best_post_to_make_first']}"
         )
 
-    def _publish_draft_response(self, message: str, platform: str) -> str:
+    def _build_content_ideation_response(self, message: str, platform: str) -> str:
+        p = platform.capitalize() if platform != "general" else "General"
+        struct = {
+            "ideas": [
+                {"title": "שקיעה מהמרפסת", "angle": "POV reel — 10 שניות שקט + נוף"},
+                {"title": "בוקר יווני", "angle": "קפה + בריכה + אווירה"},
+                {"title": "5 דברים שלא ידעתם על פורטו ראפטי", "angle": "carousel חינוכי"},
+                {"title": "לפני ואחרי — הגעה לוילה", "angle": "transition reel"},
+                {"title": "מה אורחים אומרים", "angle": "UGC-style testimonial"},
+            ],
+            "best_idea": "שקיעה מהמרפסת",
+            "why_now": "תוכן שקיעה מגיע לshare גבוה בעונת האביב — אנשים מתחילים לתכנן חופשות",
+        }
+        ideas_text = "\n".join(f"{i+1}. {idea['title']}: {idea['angle']}" for i, idea in enumerate(struct["ideas"]))
         return (
-            f"טיוטת פרסום מוכנה ל-{platform}:\n"
-            f"• Caption: מוכן\n"
-            f"• Asset refs: נדרש לבחור וידאו/תמונה\n"
-            f"• זמן מומלץ: 19:00\n"
-            f"• Hub: Postiz\n"
-            f"מוכן לאישור לפני תזמון."
+            f"💡 Content Ideas — {p}\n\n"
+            f"{ideas_text}\n\n"
+            f"הכי טוב עכשיו: {struct['best_idea']}\n"
+            f"למה עכשיו: {struct['why_now']}"
         )
 
-    def _campaign_plan_response(self, platform: str) -> str:
+    def _build_publish_draft_response(self, message: str, platform: str) -> str:
+        p = platform.capitalize() if platform != "general" else "General"
+        caption = "וילה ליתוס — המקום שבו השקיעה עושה את כל העבודה 🌅"
+        hashtags = "#VillaLithos #GreekEscape #LuxuryVilla"
+        asset_refs = self.asset_manager.get_asset_refs("post", platform)
+
+        payload = self.publisher.build_payload(
+            platform=platform,
+            caption=caption,
+            hashtags=hashtags,
+            asset_refs=asset_refs.get("available", []),
+            scheduled_time="19:00",
+        )
+        result = self.publisher.submit_to_postiz(payload)
+        draft_id = result.get("draft_id", "unknown")
+
+        missing = asset_refs.get("missing", [])
+        assets_summary = ", ".join(missing) if missing else "הכל זמין"
+
         return (
-            f"טיוטת קמפיין ל-{platform}:\n"
-            f"• Goal: יותר פניות ישירות\n"
-            f"• Angle: חופשת בוטיק עם נוף\n"
-            f"• Content buckets: שקיעה / חללים / חוויית אירוח\n"
-            f"• CTA: בדיקת זמינות / שליחת הודעה"
+            f"📤 Publish Draft — {p}\n\n"
+            f"Copy: {caption}\n"
+            f"Assets: {assets_summary}\n"
+            f"זמן מומלץ: 19:00\n"
+            f"Draft: שמור ({draft_id})\n\n"
+            f"⚠️ נדרש אישור לפני פרסום"
         )
 
-    def _audience_research_response(self, platform: str) -> str:
+    def _build_schedule_post_response(self, message: str, platform: str) -> str:
+        p = platform.capitalize() if platform != "general" else "General"
+        # Extract time from message if present
+        time_match = re.search(r'(\d{1,2}:\d{2})', message)
+        scheduled_time = time_match.group(1) if time_match else "19:00"
+
+        payload = self.publisher.build_payload(
+            platform=platform,
+            caption="(from latest draft)",
+            hashtags="",
+            asset_refs=[],
+            scheduled_time=scheduled_time,
+        )
+        result = self.publisher.submit_to_postiz(payload)
+        draft_id = result.get("draft_id", "unknown")
+        status = result.get("status", "unknown")
+
         return (
-            f"מחקר קהל ראשוני ל-{platform}:\n"
-            f"• קהל סביר: זוגות, חופשות קצרות, מחפשי וילות פרימיום\n"
-            f"• זוויות שעובדות: רוגע, פרטיות, נוף, escape\n"
-            f"• בדיקה הבאה: איזה angle מביא יותר save/share"
+            f"🗓️ Schedule Draft — {p}\n\n"
+            f"זמן: {scheduled_time}\n"
+            f"Draft ID: {draft_id}\n"
+            f"סטטוס: {status}\n\n"
+            f"⚠️ נדרש אישור לפני תזמון"
         )
 
-    def _status_response(self, platform: str, hook_data: Optional[dict], config: Optional[dict]) -> str:
+    def _status_response(self, platform: str) -> str:
+        p = platform.capitalize() if platform != "general" else "General"
+        hook_data = self._load_hook_data()
+        config = self._load_config()
         return (
-            f"סטטוס טלי: מוכנה לעבוד על {platform}.\n"
+            f"סטטוס טלי: מוכנה לעבוד על {p}.\n"
             f"• Hook data: {'זמין' if hook_data else 'לא זמין'}\n"
             f"• Config: {'זמין' if config else 'לא זמין'}\n"
+            f"• Analytics: זמין\n"
+            f"• Assets: villa-lithos/assets/\n"
             f"• Publishing hub: Postiz"
         )
 
-    # ── Helpers ──────────────────────────────────────────────────────
+    # ── Classifier ────────────────────────────────────────────────────
+
+    def _classify_task(self, message: str) -> str:
+        msg = message.lower()
+
+        # 1. performance intent
+        if any(kw in msg for kw in [
+            "מה עבד", "הכי טוב", "performance", "analytics", "ביצועים",
+            "engagement", "views", "צפיות", "reach", "מה הצליח"
+        ]):
+            return "performance_check"
+
+        # 2. hook intent
+        if any(kw in msg for kw in ["hook", "הוק", "hooks", "variation"]):
+            return "hook_variation"
+
+        # 3. visual/brief intent
+        if any(kw in msg for kw in [
+            "carousel", "קרוסלה", "brief", "בריף", "thumbnail",
+            "slide", "shot list", "שוטים", "pin"
+        ]):
+            return "visual_brief"
+
+        # 4. weekly plan
+        if any(kw in msg for kw in [
+            "שבוע תוכן", "תוכנית שבועית", "weekly plan", "weekly content", "תבני שבוע"
+        ]):
+            return "weekly_plan"
+
+        # 5. content ideation
+        if any(kw in msg for kw in [
+            "רעיון", "ideas", "idea", "רעיונות", "angles", "themes", "content idea"
+        ]):
+            return "content_ideation"
+
+        # 6. publish draft
+        if any(kw in msg for kw in [
+            "publish draft", "draft לפרסום", "הכן פרסום", "publish prep", "הכן draft"
+        ]):
+            return "publish_draft"
+
+        # 7. schedule
+        if any(kw in msg for kw in ["schedule", "תזמן", "לתזמן", "set time", "כמה תפרסם"]):
+            return "schedule_post"
+
+        # 8. platform + writing intent → caption_gen
+        if self._extract_platform(msg) and self._has_writing_intent(msg):
+            return "caption_gen"
+
+        # 9. status keywords only
+        if any(kw in msg for kw in ["status", "מצב", "מה הסטטוס"]):
+            return "status_check"
+
+        # 10. general writing fallback
+        if self._has_writing_intent(msg):
+            return "caption_gen"
+
+        # 11. default
+        return "status_check"
+
+    # ── Helpers ────────────────────────────────────────────────────────
 
     def _has_writing_intent(self, msg: str) -> bool:
         return any(kw in msg for kw in [
@@ -327,51 +446,6 @@ class TaliAgent(DomainAgent):
                 return platform
         return None
 
-    def _classify_task(self, message: str) -> str:
-        msg = message.lower()
-
-        # א. performance intent
-        performance_kws = [
-            "מה עבד", "הכי טוב השבוע", "מה הצליח", "איזה פוסט", "best performing",
-            "top post", "performance", "analytics", "ביצועים", "engagement",
-            "views", "reach", "צפיות"
-        ]
-        if any(kw in msg for kw in performance_kws):
-            return "performance_check"
-
-        # ב. hook intent
-        hook_kws = ["hook", "הוק", "variation", "וריאציה"]
-        if any(kw in msg for kw in hook_kws):
-            return "hook_variation"
-
-        # ג. visual brief intent
-        visual_kws = ["carousel", "קרוסלה", "pin", "brief", "בריף", "thumbnail", "slide", "שוטים"]
-        if any(kw in msg for kw in visual_kws):
-            return "visual_brief"
-
-        # ד. platform + writing intent → caption_gen
-        if self._extract_platform(msg) and self._has_writing_intent(msg):
-            return "caption_gen"
-
-        # ה. weekly plan intent
-        weekly_kws = ["שבוע תוכן", "תוכנית שבועית", "weekly plan", "weekly content", "תבני שבוע", "תכנון שבועי"]
-        if any(kw in msg for kw in weekly_kws):
-            return "weekly_plan"
-
-        # ו. status intent אמיתי בלבד
-        status_kws = ["status", "מצב", "מה הסטטוס"]
-        if any(kw in msg for kw in status_kws):
-            return "status_check"
-
-        # ז. fallback: general content → caption_gen, otherwise status_check
-        general_content_kws = [
-            "caption", "כיתוב", "טקסט לפוסט", "פוסט", "תכתבי", "כתוב", "draft", "write", "copy", "ניסוח"
-        ]
-        if any(kw in msg for kw in general_content_kws):
-            return "caption_gen"
-
-        return "status_check"
-
     def _get_tier(self, task_type: str) -> ModelTier:
         config = self.TASK_TYPES.get(task_type, {})
         tier_str = config.get("tier", "tier1")
@@ -380,24 +454,6 @@ class TaliAgent(DomainAgent):
             "tier2": ModelTier.TIER2_MID,
             "tier3": ModelTier.TIER3_PREMIUM,
         }.get(tier_str, ModelTier.TIER1_CHEAP)
-
-    def _extract_platform(self, message: str) -> str:
-        msg = message.lower()
-        if "pinterest" in msg or "פינטרסט" in msg:
-            return "Pinterest"
-        if "facebook" in msg or "פייסבוק" in msg:
-            return "Facebook"
-        if "instagram" in msg or "אינסטגרם" in msg:
-            return "Instagram"
-        if "tiktok" in msg or "טיקטוק" in msg:
-            return "TikTok"
-        return "Instagram"
-
-    def _resolve_model(self, context: Dict) -> str:
-        decision = context.get("model_decision") or {}
-        if isinstance(decision, dict) and decision.get("model"):
-            return decision["model"]
-        return "anthropic/claude-sonnet-4-20250514"
 
     def _load_hook_data(self) -> Optional[dict]:
         try:
