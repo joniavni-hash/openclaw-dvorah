@@ -77,12 +77,10 @@ python3 /home/jonia/.openclaw/workspace/core/research_scheduler.py run-scheduled
 ## 🏖️ טלי - Villa Marketing — 09:00
 
 **בכל heartbeat אחרי 09:00 (לפני 11:00):**
-טלי מנתבת דרך Context Injection:
-```
-צרי תוכן שיווקי יומי לVilla Lithos - Larry methodology עם 6 slides לTikTok ו-Instagram
-```
-- פרסום חדש → שלחי דרך Postiz לכל הפלטפורמות
-- תוכן לא מוכן → דלגי
+**מצב: Observation Week (2026-03-27 → 2026-04-03)**
+- אל תפתחי refactor או feature חדש
+- תעדי ב-villa-lithos/analytics/weekly_operating_log.md כל publish / failure / signal
+- בסוף השבוע (4.4 heartbeat): הכיני Weekly Operating Review ושלחי ליוני
 - פעם ביום בלבד
 
 ---
