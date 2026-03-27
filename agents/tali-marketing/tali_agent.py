@@ -144,15 +144,15 @@ class TaliAgent(DomainAgent):
 
     def _build_response(self, task_type: str, message: str, platform: str, hook_data: Optional[dict], config: Optional[dict]) -> Tuple[str, str]:
         if task_type == "caption_gen":
-            return self._caption_response(message, platform), "content_ready"
+            return self._build_caption_response(message, platform), "content_ready"
         if task_type == "hook_variation":
-            return self._hooks_response(message, platform), "content_ready"
+            return self._build_hook_response(message, platform), "content_ready"
         if task_type == "visual_brief":
-            return self._visual_brief_response(message, platform), "asset_brief_ready"
+            return self._build_visual_brief_response(message, platform), "asset_brief_ready"
         if task_type == "performance_check":
-            return self._performance_response(platform, hook_data), "performance_analysis_ready"
-        if task_type == "content_strategy":
-            return self._weekly_plan_response(platform), "calendar_ready"
+            return self._build_performance_response(platform, hook_data), "performance_analysis_ready"
+        if task_type in ("content_strategy", "weekly_plan"):
+            return self._build_weekly_plan_response(platform), "calendar_ready"
         if task_type == "schedule_post":
             return self._publish_draft_response(message, platform), "publish_draft_ready"
         if task_type == "campaign_plan":
@@ -161,53 +161,117 @@ class TaliAgent(DomainAgent):
             return self._audience_research_response(platform), "performance_analysis_ready"
         return self._status_response(platform, hook_data, config), "content_ready"
 
-    def _caption_response(self, message: str, platform: str) -> str:
+    def _build_caption_response(self, message: str, platform: str) -> str:
+        """Output contract: platform, primary_caption, cta, hashtags, optional_variant"""
+        p = platform.capitalize()
+        struct = {
+            "platform": p,
+            "primary_caption": "וילה ליתוס, המקום שבו השקיעה עושה את כל העבודה 🌅\nאם אתם מחפשים חופשה שקטה עם נוף שנשאר בראש, זה המקום.",
+            "cta": "שלחו הודעה לפרטים וזמינות",
+            "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla #PortoRafti",
+            "optional_variant": "וילה ליתוס — נוף, שקט, ים. הכל כלול. 🌊",
+        }
         return (
-            f"כיתוב מוכן ל-{platform}:\n"
-            f"וילה ליתוס, המקום שבו השקיעה עושה את כל העבודה 🌅\n"
-            f"אם אתם מחפשים חופשה שקטה עם נוף שנשאר בראש, זה המקום.\n\n"
-            f"CTA: שלחו הודעה לפרטים וזמינות.\n"
-            f"האשטגים: #VillaLithos #{platform.replace(' ', '')} #GreekEscape"
+            f"📸 Caption — {struct['platform']}\n\n"
+            f"{struct['primary_caption']}\n\n"
+            f"CTA: {struct['cta']}\n"
+            f"תגיות: {struct['hashtags']}\n\n"
+            f"וריאנט: {struct['optional_variant']}"
         )
 
-    def _hooks_response(self, message: str, platform: str) -> str:
-        hooks = [
-            "המקום הזה מרגיש לא אמיתי",
-            "אם אתם צריכים חופשה אחת טובה השנה, זו כנראה היא",
-            "3 שניות פנימה ואתם כבר רוצים להזמין",
-            "הנוף הזה עושה 80% מהשיווק לבד",
-            "לא עוד וילה יפה, אלא וילה שאנשים זוכרים",
-        ]
-        return "הוקים מומלצים:\n- " + "\n- ".join(hooks)
-
-    def _visual_brief_response(self, message: str, platform: str) -> str:
+    def _build_hook_response(self, message: str, platform: str) -> str:
+        """Output contract: hooks (3–5), recommended_hook, angle"""
+        struct = {
+            "hooks": [
+                "המקום הזה מרגיש לא אמיתי",
+                "אם אתם צריכים חופשה אחת טובה השנה, זו כנראה היא",
+                "3 שניות פנימה ואתם כבר רוצים להזמין",
+                "הנוף הזה עושה 80% מהשיווק לבד",
+                "לא עוד וילה יפה, אלא וילה שאנשים זוכרים",
+            ],
+            "recommended_hook": "הנוף הזה עושה 80% מהשיווק לבד",
+            "angle": "רגשי-ויזואלי — גורם לצופה לדמיין את עצמו שם",
+        }
+        hooks_text = "\n".join(f"{i+1}. {h}" for i, h in enumerate(struct["hooks"]))
         return (
-            f"בריף ויזואלי ל-{platform}:\n"
-            f"• פתיח: שוט רחב של הנוף / הבריכה\n"
-            f"• אמצע: 3 פריימים קצרים של חלל, שולחן, שקיעה\n"
-            f"• סיום: CTA על המסך - 'בדקו זמינות'\n"
-            f"• Thumbnail text: 'הנוף שיגרום לכם להזמין'"
+            f"🎣 Hooks — {platform.capitalize()}\n\n"
+            f"{hooks_text}\n\n"
+            f"מומלץ: {struct['recommended_hook']}\n"
+            f"זווית: {struct['angle']}"
         )
 
-    def _performance_response(self, platform: str, hook_data: Optional[dict]) -> str:
-        if not hook_data:
-            return f"אין עדיין נתוני ביצועים מסודרים ל-{platform}.\nהמלצה: להתחיל לעקוב אחרי hooks, views ו-saves."
-        top_hint = hook_data.get("top_hook") or "ויזואל פתיחה חזק + שקיעה"
+    def _build_visual_brief_response(self, message: str, platform: str) -> str:
+        """Output contract: format, opening_frame, middle_frames, closing_frame, thumbnail_text, cta"""
+        struct = {
+            "format": "Carousel / Reel",
+            "opening_frame": "שוט רחב — נוף הים מהמרפסת, שעת שקיעה",
+            "middle_frames": [
+                "חלל פנימי — סלון פתוח לים",
+                "שולחן ערוך על הטרסה",
+                "בריכה עם רקע הים",
+            ],
+            "closing_frame": "לוגו + CTA על המסך",
+            "thumbnail_text": "הנוף שיגרום לכם להזמין",
+            "cta": "בדקו זמינות",
+        }
+        middle = "\n".join(f"  • {f}" for f in struct["middle_frames"])
         return (
-            f"סיכום ביצועים ל-{platform}:\n"
-            f"• Hook מוביל: {top_hint}\n"
-            f"• מה להמשיך: פתיח קצר + נוף + CTA רך\n"
-            f"• ניסוי הבא: 3 וריאציות הוק על אותו ויזואל"
+            f"🎬 Visual Brief — {platform.capitalize()}\n\n"
+            f"פורמט: {struct['format']}\n"
+            f"פתיח: {struct['opening_frame']}\n"
+            f"אמצע:\n{middle}\n"
+            f"סיום: {struct['closing_frame']}\n"
+            f"Thumbnail: {struct['thumbnail_text']}\n"
+            f"CTA: {struct['cta']}"
         )
 
-    def _weekly_plan_response(self, platform: str) -> str:
+    def _build_performance_response(self, platform: str, hook_data: Optional[dict]) -> str:
+        """Output contract: what_worked, what_didnt, best_guess_if_no_live_data, next_actions"""
+        top_hook = hook_data.get("top_hook") if hook_data else None
+        struct = {
+            "what_worked": top_hook or "פתיח ויזואלי חזק עם שקיעה — generates highest watch-time",
+            "what_didnt": "CTA כפול באמצע הפוסט — מוריד engagement",
+            "best_guess_if_no_live_data": "hooks עם נוף + רגש עובדים בסגמנט הזה. saving > liking.",
+            "next_actions": [
+                "לבדוק 3 וריאציות הוק על אותו ויזואל",
+                "להעביר CTA לסוף בלבד",
+                "לתת עדיפות לreels על carousel בשלב זה",
+            ],
+        }
+        actions = "\n".join(f"  {i+1}. {a}" for i, a in enumerate(struct["next_actions"]))
+        live = " (ללא live data — best estimate)" if not hook_data else ""
         return (
-            f"תכנית תוכן שבועית ל-{platform}:\n"
-            f"1. Reel: שקיעה + hook רגשי\n"
-            f"2. Carousel: 5 סיבות לבחור בוילה\n"
-            f"3. UGC-style clip: בוקר/קפה/בריכה\n"
-            f"4. Post: המלצת סוף שבוע + CTA\n"
-            f"5. Story/Pin: availability push"
+            f"📊 Performance{live} — {platform.capitalize()}\n\n"
+            f"✅ מה עבד: {struct['what_worked']}\n"
+            f"❌ מה לא עבד: {struct['what_didnt']}\n"
+            f"💡 הערכה: {struct['best_guess_if_no_live_data']}\n\n"
+            f"פעולות הבאות:\n{actions}"
+        )
+
+    def _build_weekly_plan_response(self, platform: str) -> str:
+        """Output contract: theme, platform_mix, posts, priority_post, best_post_to_make_first"""
+        struct = {
+            "theme": "Villa Lithos — escape, privacy, view",
+            "platform_mix": ["Instagram Reels", "TikTok", "Pinterest Carousel", "Facebook Post"],
+            "posts": [
+                {"day": "ראשון", "type": "Reel", "angle": "שקיעה + hook רגשי"},
+                {"day": "שלישי", "type": "Carousel", "angle": "5 סיבות לבחור בוילה"},
+                {"day": "רביעי", "type": "UGC-style clip", "angle": "בוקר / קפה / בריכה"},
+                {"day": "שישי", "type": "Post", "angle": "המלצת סוף שבוע + CTA"},
+                {"day": "שבת", "type": "Story/Pin", "angle": "availability push"},
+            ],
+            "priority_post": "Reel שקיעה — הכי גבוה ב-reach",
+            "best_post_to_make_first": "Reel שקיעה — asset כנראה כבר קיים, zero production time",
+        }
+        posts_text = "\n".join(f"  {p['day']}: {p['type']} — {p['angle']}" for p in struct["posts"])
+        mix = ", ".join(struct["platform_mix"])
+        return (
+            f"📅 Weekly Plan — Villa Lithos\n\n"
+            f"תמה: {struct['theme']}\n"
+            f"פלטפורמות: {mix}\n\n"
+            f"פוסטים:\n{posts_text}\n\n"
+            f"עדיפות: {struct['priority_post']}\n"
+            f"להתחיל מ: {struct['best_post_to_make_first']}"
         )
 
     def _publish_draft_response(self, message: str, platform: str) -> str:
@@ -289,12 +353,17 @@ class TaliAgent(DomainAgent):
         if self._extract_platform(msg) and self._has_writing_intent(msg):
             return "caption_gen"
 
-        # ה. status intent אמיתי בלבד
+        # ה. weekly plan intent
+        weekly_kws = ["שבוע תוכן", "תוכנית שבועית", "weekly plan", "weekly content", "תבני שבוע", "תכנון שבועי"]
+        if any(kw in msg for kw in weekly_kws):
+            return "weekly_plan"
+
+        # ו. status intent אמיתי בלבד
         status_kws = ["status", "מצב", "מה הסטטוס"]
         if any(kw in msg for kw in status_kws):
             return "status_check"
 
-        # ו. fallback: general content → caption_gen, otherwise status_check
+        # ז. fallback: general content → caption_gen, otherwise status_check
         general_content_kws = [
             "caption", "כיתוב", "טקסט לפוסט", "פוסט", "תכתבי", "כתוב", "draft", "write", "copy", "ניסוח"
         ]
