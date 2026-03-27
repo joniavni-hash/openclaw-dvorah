@@ -247,11 +247,60 @@ class TaliAgent(DomainAgent):
 
     # ── Helpers ──────────────────────────────────────────────────────
 
+    def _has_writing_intent(self, msg: str) -> bool:
+        return any(kw in msg for kw in [
+            "תכתבי", "כתוב", "caption", "כיתוב", "פוסט", "טקסט", "copy", "ניסוח", "draft", "write"
+        ])
+
+    def _extract_platform(self, msg: str) -> Optional[str]:
+        for platform, aliases in {
+            "facebook": ["facebook", "פייסבוק", "fb"],
+            "instagram": ["instagram", "אינסטגרם", "insta"],
+            "tiktok": ["tiktok", "טיקטוק", "tik tok"],
+            "pinterest": ["pinterest", "פינטרסט"],
+        }.items():
+            if any(a in msg for a in aliases):
+                return platform
+        return None
+
     def _classify_task(self, message: str) -> str:
         msg = message.lower()
-        for task_type, config in self.TASK_TYPES.items():
-            if any(kw in msg for kw in config["keywords"]):
-                return task_type
+
+        # א. performance intent
+        performance_kws = [
+            "מה עבד", "הכי טוב השבוע", "מה הצליח", "איזה פוסט", "best performing",
+            "top post", "performance", "analytics", "ביצועים", "engagement",
+            "views", "reach", "צפיות"
+        ]
+        if any(kw in msg for kw in performance_kws):
+            return "performance_check"
+
+        # ב. hook intent
+        hook_kws = ["hook", "הוק", "variation", "וריאציה"]
+        if any(kw in msg for kw in hook_kws):
+            return "hook_variation"
+
+        # ג. visual brief intent
+        visual_kws = ["carousel", "קרוסלה", "pin", "brief", "בריף", "thumbnail", "slide", "שוטים"]
+        if any(kw in msg for kw in visual_kws):
+            return "visual_brief"
+
+        # ד. platform + writing intent → caption_gen
+        if self._extract_platform(msg) and self._has_writing_intent(msg):
+            return "caption_gen"
+
+        # ה. status intent אמיתי בלבד
+        status_kws = ["status", "מצב", "מה הסטטוס"]
+        if any(kw in msg for kw in status_kws):
+            return "status_check"
+
+        # ו. fallback: general content → caption_gen, otherwise status_check
+        general_content_kws = [
+            "caption", "כיתוב", "טקסט לפוסט", "פוסט", "תכתבי", "כתוב", "draft", "write", "copy", "ניסוח"
+        ]
+        if any(kw in msg for kw in general_content_kws):
+            return "caption_gen"
+
         return "status_check"
 
     def _get_tier(self, task_type: str) -> ModelTier:
