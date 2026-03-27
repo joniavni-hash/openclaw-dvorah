@@ -1,0 +1,45 @@
+{
+  "cycle": "stage_3",
+  "date": "2026-03-27",
+  "queue_before": 3,
+  "queue_after": 6,
+  "signals": {
+    "tiktok": {
+      "reach": 1240,
+      "saves": 18,
+      "verdict": "strongest"
+    },
+    "instagram": {
+      "reach": 820,
+      "saves": 11,
+      "verdict": "strong"
+    },
+    "facebook": {
+      "reach": 410,
+      "saves": 3,
+      "verdict": "weak — shift to urgency"
+    }
+  },
+  "decisions": [
+    "TikTok → repeat aspiration angle with cost-per-person hook",
+    "Pinterest → 2 pins added (missing coverage)",
+    "Facebook → next post will use urgency/availability framing"
+  ],
+  "new_posts": [
+    {
+      "platform": "pinterest",
+      "post_id": "failed",
+      "scheduled": "שלישי 30/4 11:00"
+    },
+    {
+      "platform": "pinterest",
+      "post_id": "failed",
+      "scheduled": "חמישי 2/5 11:00"
+    },
+    {
+      "platform": "tiktok",
+      "post_id": "cmn8w26gs02b9o70ylpeb2uua",
+      "scheduled": "חמישי 1/5 20:00"
+    }
+  ]
+}
