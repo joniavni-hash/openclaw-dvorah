@@ -44,15 +44,21 @@ class TaliAgent(DomainAgent):
     ]
 
     TASK_TYPES = {
-        "caption_gen":       {"tier": "tier1"},
-        "hook_variation":    {"tier": "tier1"},
-        "visual_brief":      {"tier": "tier1"},
-        "performance_check": {"tier": "tier2"},
-        "weekly_plan":       {"tier": "tier2"},
-        "content_ideation":  {"tier": "tier1"},
-        "publish_draft":     {"tier": "tier1"},
-        "schedule_post":     {"tier": "tier1"},
-        "status_check":      {"tier": "tier1"},
+        "caption_gen":          {"tier": "tier1"},
+        "hook_variation":       {"tier": "tier1"},
+        "visual_brief":         {"tier": "tier1"},
+        "performance_check":    {"tier": "tier2"},
+        "weekly_plan":          {"tier": "tier2"},
+        "content_ideation":     {"tier": "tier1"},
+        "publish_draft":        {"tier": "tier1"},
+        "schedule_post":        {"tier": "tier1"},
+        "autonomous_routine":   {"tier": "tier2"},
+        "status_check":         {"tier": "tier1"},
+    }
+
+    ROUTINE_TASKS = {
+        "caption_gen", "hook_variation", "visual_brief", "performance_check",
+        "weekly_plan", "content_ideation", "publish_draft", "autonomous_routine",
     }
 
     def __init__(self):
@@ -87,7 +93,10 @@ class TaliAgent(DomainAgent):
 
         final_text, output_mode = self._build_response(task_type, message, platform, context)
 
-        approval_required = task_type in {"publish_draft", "schedule_post", "campaign_plan"}
+        is_autonomous = task_type == "autonomous_routine"
+        approval_required = task_type in {"schedule_post", "campaign_plan"}
+        is_routine = task_type in self.ROUTINE_TASKS
+        routine_vs_high_risk = "high_risk" if (task_type == "schedule_post" and context.get("force_publish")) else "routine" if is_routine else "standard"
 
         return FinalPayload(
             status="ok",
@@ -107,9 +116,11 @@ class TaliAgent(DomainAgent):
                 "analytics_available": True,
                 "assets_root": "villa-lithos/assets/",
                 "approval_required": approval_required,
-                "draft_saved": task_type in {"publish_draft", "schedule_post"},
-                "external_action_attempted": task_type in {"publish_draft", "schedule_post"},
-                "external_action_result": "local_draft" if task_type in {"publish_draft", "schedule_post"} else None,
+                "draft_saved": task_type in {"publish_draft", "schedule_post", "autonomous_routine"},
+                "external_action_attempted": task_type in {"publish_draft", "schedule_post", "autonomous_routine"},
+                "external_action_result": "local_draft" if task_type in {"publish_draft", "schedule_post", "autonomous_routine"} else None,
+                "autonomous_mode": is_autonomous,
+                "routine_vs_high_risk": routine_vs_high_risk,
             }
         )
 
@@ -153,8 +164,9 @@ class TaliAgent(DomainAgent):
             "performance_check": lambda: (self._build_performance_response(platform, message), "performance_analysis_ready"),
             "weekly_plan":       lambda: (self._build_weekly_plan_response(platform), "calendar_ready"),
             "content_ideation":  lambda: (self._build_content_ideation_response(message, platform), "content_ready"),
-            "publish_draft":     lambda: (self._build_publish_draft_response(message, platform), "publish_draft_ready"),
-            "schedule_post":     lambda: (self._build_schedule_post_response(message, platform), "schedule_ready"),
+            "publish_draft":       lambda: (self._build_publish_draft_response(message, platform), "publish_draft_ready"),
+            "schedule_post":       lambda: (self._build_schedule_post_response(message, platform), "schedule_ready"),
+            "autonomous_routine":  lambda: (self._build_autonomous_routine_response(message, platform), "autonomous_routine_ready"),
         }
         builder = dispatch.get(task_type)
         if builder:
@@ -314,6 +326,7 @@ class TaliAgent(DomainAgent):
             hashtags=hashtags,
             asset_refs=asset_refs.get("available", []),
             scheduled_time="19:00",
+            cta="שלחו הודעה לפרטים וזמינות",
         )
         result = self.publisher.submit_to_postiz(payload)
         draft_id = result.get("draft_id", "unknown")
@@ -342,6 +355,7 @@ class TaliAgent(DomainAgent):
             hashtags="",
             asset_refs=[],
             scheduled_time=scheduled_time,
+            approval_required=True,
         )
         result = self.publisher.submit_to_postiz(payload)
         draft_id = result.get("draft_id", "unknown")
@@ -353,6 +367,43 @@ class TaliAgent(DomainAgent):
             f"Draft ID: {draft_id}\n"
             f"סטטוס: {status}\n\n"
             f"⚠️ נדרש אישור לפני תזמון"
+        )
+
+    def _build_autonomous_routine_response(self, message: str, platform: str) -> str:
+        p = platform.capitalize() if platform != "general" else "General"
+
+        # 1. Get analytics signal
+        signal = self.analytics.get_best_signal(platform)
+
+        # 2. Generate caption based on signal
+        caption = f"וילה ליתוס — {signal.get('best_angle', 'חוויה שלא נשכחת')} 🌅"
+        hashtags = "#VillaLithos #GreekEscape #LuxuryVilla"
+        cta = "שלחו הודעה לפרטים וזמינות"
+
+        # 3. Build and save publish draft
+        asset_refs = self.asset_manager.get_asset_refs("post", platform)
+        payload = self.publisher.build_payload(
+            platform=platform,
+            caption=caption,
+            hashtags=hashtags,
+            asset_refs=asset_refs.get("available", []),
+            scheduled_time="19:00",
+            cta=cta,
+            approval_required=False,
+            autonomous_mode=True,
+        )
+        result = self.publisher.submit_to_postiz(payload)
+        draft_id = result.get("draft_id", "unknown")
+
+        snippet = caption[:80]
+        return (
+            f"🤖 Autonomous Routine — {p}\n\n"
+            f"📊 Signal: {signal.get('what_worked', 'N/A')} (confidence: {signal.get('confidence', 'unknown')})\n"
+            f"📝 Content: {snippet}\n"
+            f"📤 Draft: {draft_id}\n"
+            f"🗓️ Suggested time: 19:00\n\n"
+            f"Mode: routine (auto-approved)\n"
+            f"Next: awaiting asset confirmation or publish trigger"
         )
 
     def _status_response(self, platform: str) -> str:
@@ -372,6 +423,13 @@ class TaliAgent(DomainAgent):
 
     def _classify_task(self, message: str) -> str:
         msg = message.lower()
+
+        # 0. autonomous routine intent
+        if any(kw in msg for kw in [
+            "autonomous", "routine", "auto publish", "full cycle",
+            "פעל אוטומטית", "מחזור שלם", "routine mode"
+        ]):
+            return "autonomous_routine"
 
         # 1. performance intent
         if any(kw in msg for kw in [

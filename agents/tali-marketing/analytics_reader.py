@@ -32,6 +32,11 @@ class AnalyticsReader:
             return ""
 
     def get_best_signal(self, platform: str) -> dict:
+        """
+        Priority: platform_posts → hook_performance → weekly_summary → heuristic
+        NEVER returns empty or "no data"
+        Returns: {source, top_hook, best_angle, what_worked, what_didnt, next_action, confidence}
+        """
         # Priority 1: platform posts
         posts = self.load_platform_posts(platform)
         if posts:
@@ -42,6 +47,8 @@ class AnalyticsReader:
                 "best_angle": best.get("caption_snippet", ""),
                 "what_worked": f"Top post: {best.get('caption_snippet', '')} — {best.get('likes', 0)} likes, {best.get('saves', 0)} saves, reach {best.get('reach', 0)}",
                 "what_didnt": "Posts with mid-content CTA underperformed",
+                "next_action": "Create 3 hook variations on the top performer angle",
+                "confidence": "live",
             }
 
         # Priority 2: hook performance
@@ -53,24 +60,31 @@ class AnalyticsReader:
                 "best_angle": hooks.get("best_performing_angle", ""),
                 "what_worked": f"Top hook: {hooks.get('top_hook', '')} — avg watch time {hooks.get('avg_watch_time', 0)}s",
                 "what_didnt": "Hooks without emotional angle had lower retention",
+                "next_action": "Scale top hook with visual variations across platforms",
+                "confidence": "live",
             }
 
         # Priority 3: weekly summary
         summary = self.load_weekly_summary()
         if summary:
+            first_line = summary.strip().split("\n")[0] if summary.strip() else ""
             return {
                 "source": "weekly_summary",
                 "top_hook": "Visual-emotional hooks with sunset/view",
                 "best_angle": "רגשי-ויזואלי — שקיעה + נוף ים",
-                "what_worked": "Sunset + view hooks drive highest watch time across platforms",
+                "what_worked": first_line or "Sunset + view hooks drive highest watch time across platforms",
                 "what_didnt": "Double CTA and weak carousel openings underperformed",
+                "next_action": "Focus next 3 posts on sunset/view angle with single end-CTA",
+                "confidence": "estimated",
             }
 
-        # Priority 4: heuristic
+        # Priority 4: heuristic fallback — known-good defaults for villa rental content
         return {
             "source": "heuristic",
             "top_hook": "הנוף הזה עושה 80% מהשיווק לבד",
             "best_angle": "רגשי-ויזואלי — שקיעה + נוף ים",
             "what_worked": "Visual-first content with emotional hooks performs best in luxury travel",
             "what_didnt": "Text-heavy posts without strong visuals tend to underperform",
+            "next_action": "Produce 1 sunset reel + 1 carousel with view-first opening",
+            "confidence": "heuristic",
         }
