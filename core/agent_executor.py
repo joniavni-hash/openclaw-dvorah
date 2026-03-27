@@ -235,21 +235,37 @@ class AgentExecutor:
         }
 
     def _handle_tali(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Marketing agent."""
-        return {
-            "status": "routed",
-            "agent": "טלי",
-            "domain": "marketing",
-            "response_type": "marketing_content",
-            "requires_approval": True,
-            "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
-            "summary": "Marketing task queued",
-            "draft_actions": {
-                "approval_reason": "Marketing content requires review before publishing",
-                "action": "create_content",
-            },
-            "metadata": _meta(routing_result.get("model", "tier2"), "content_creation"),
-        }
+        """Marketing agent — delegates to TaliAgent.execute()."""
+        tier = routing_result.get("model", "tier1")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "tali-marketing"))
+            from tali_agent import TaliAgent
+            agent = TaliAgent()
+            payload = agent.execute(message, {**metadata})
+            pd = payload.to_dict()
+            return {
+                "status": pd.get("status", "ok"),
+                "agent": "טלי",
+                "domain": "marketing",
+                "response_type": "marketing_content",
+                "requires_approval": pd.get("requires_approval", False),
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
+                "summary": pd.get("final_text", ""),
+                "metadata": {**_meta(tier, "content_creation"),
+                             **pd.get("metadata", {})},
+            }
+        except Exception as e:
+            return {
+                "status": "routed",
+                "agent": "טלי",
+                "domain": "marketing",
+                "response_type": "marketing_content",
+                "requires_approval": True,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
+                "summary": "Marketing task queued (agent error)",
+                "metadata": {**_meta(tier, "content_creation"), "error": str(e)},
+            }
 
     def _handle_eti(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
         """Automation agent."""
