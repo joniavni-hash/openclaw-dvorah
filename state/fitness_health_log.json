@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-03-25",
+    "steps": 8500,
+    "active_calories": 320,
+    "workouts_count": 0,
+    "workout_minutes": 0,
+    "distance_km": 5.8,
+    "standing_hours": 8,
+    "sleep_hours": 7.0,
+    "resting_hr": null,
+    "hrv": null,
+    "weight": 71.9,
+    "source": "manual",
+    "updated_at": "2026-03-25T22:00:00"
+  },
+  {
+    "date": "2026-03-26",
+    "steps": 6200,
+    "active_calories": 210,
+    "workouts_count": 0,
+    "workout_minutes": 0,
+    "distance_km": 4.2,
+    "standing_hours": 7,
+    "sleep_hours": 6.5,
+    "resting_hr": null,
+    "hrv": null,
+    "weight": null,
+    "source": "manual",
+    "updated_at": "2026-03-26T22:00:00"
+  },
+  {
+    "date": "2026-03-27",
+    "steps": 11000,
+    "active_calories": 150,
+    "workouts_count": 0,
+    "workout_minutes": 0,
+    "distance_km": 2.8,
+    "standing_hours": 5,
+    "sleep_hours": 7.5,
+    "resting_hr": null,
+    "hrv": null,
+    "weight": 71.8,
+    "source": "manual",
+    "updated_at": "2026-03-27T23:31:41.313586"
+  }
+]

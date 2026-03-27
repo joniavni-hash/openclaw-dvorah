@@ -13,9 +13,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "_shared"))
+sys.path.insert(0, str(Path(__file__).parent))
 from domain_agent_base import (
     DomainAgent, FinalPayload, RoutingResult, ModelTier, WORKSPACE
 )
+from health_bridge import HealthBridge
 
 TRACKER_PATH = WORKSPACE / "state" / "fitness_tracker.md"
 PROTEIN_GOAL = 130
@@ -34,20 +36,33 @@ class DanaAgent(DomainAgent):
         "ארוחה", "ארוחת", "בוקר", "צהריים", "ערב", "חטיף",
         "bmr", "tdee", "כושר", "הליכה", "ריצה", "תרגיל", "התאמנתי",
         "גרם", "סה\"כ", "יעד", "סיכום", "שבועי", "היום", "20 דקות",
+        # v2 keywords
+        "צעדים", "steps", "ישנתי", "שינה", "גמור", "עייף", "readiness",
+        "סיכום יום", "daily close", "adherence", "recovery",
     ]
 
     TASK_TYPES = {
+        # v2 task types — checked first
+        "daily_close": {"tier": "tier1", "keywords": ["סיכום יום", "בואי נסגור את היום", "לסגור את היום", "daily close"]},
+        "readiness_decision": {"tier": "tier2", "keywords": ["שווה להתאמן", "כוח להתאמן", "ישנתי", "גמור", "עייף", "recovery", "readiness"]},
+        "health_sync": {"tier": "tier1", "keywords": ["צעדים", "steps", "health sync", "apple"]},
+        "weekly_review_v2": {"tier": "tier2", "keywords": ["מה מצב השבוע", "review שבועי", "שבוע שלי", "adherence", "weekly coaching"]},
+        # v1 task types
         "meal_log": {"tier": "tier1", "keywords": ["אכלתי", "ארוחה", "ארוחת"]},
         "weight_log": {"tier": "tier1", "keywords": ["שקלתי", "שקילה", "משקל"]},
         "workout_log": {"tier": "tier1", "keywords": ["התאמנתי", "רצתי", "הלכתי", "אימון שעשיתי"]},
         "calorie_query": {"tier": "tier1", "keywords": ["כמה קלוריות", "כמה חלבון", "קק\"ל"]},
         "daily_status": {"tier": "tier1", "keywords": ["איפה אני עומד היום", "מה נשאר לי", "סטטוס יומי"]},
         "daily_summary": {"tier": "tier1", "keywords": ["סכמי לי את היום", "סיכום יומי", "איך היום הלך"]},
-        "weekly_review": {"tier": "tier2", "keywords": ["סיכום שבועי", "סיכום שבוע", "review שבועי", "למה אני תקוע"]},
-        "workout_decision": {"tier": "tier2", "keywords": ["שווה להתאמן", "להתאמן עכשיו", "יש לי רק", "20 דקות", "אין לי כוח"]},
+        "weekly_review": {"tier": "tier2", "keywords": ["סיכום שבועי", "סיכום שבוע", "למה אני תקוע"]},
+        "workout_decision": {"tier": "tier2", "keywords": ["להתאמן עכשיו", "יש לי רק", "20 דקות", "אין לי כוח"]},
         "plan_adjustment": {"tier": "tier2", "keywords": ["לשנות תוכנית", "להתאים", "adjust"]},
         "nutrition_plan": {"tier": "tier3", "keywords": ["תוכנית תזונה", "דיאטה חדשה"]},
     }
+
+    def __init__(self):
+        super().__init__()
+        self.health_bridge = HealthBridge()
 
     FOOD_DB = {
         "ביצה": {"kcal": 78, "protein": 6, "type": "unit"},
@@ -96,6 +111,13 @@ class DanaAgent(DomainAgent):
         tier = self._get_tier_for_task(task_type)
         tracker_data = self._load_tracker()
         entries = self._parse_tracker_entries(tracker_data)
+
+        # v2: auto-ingest health signals for health_sync
+        if task_type == "health_sync":
+            parsed = self.health_bridge.parse_from_message(message)
+            if parsed.get("date"):
+                self.health_bridge.upsert_day(parsed)
+
         final_text, output_contract = self._build_response(task_type, message, entries)
         write_acts = self._build_write_actions(task_type, message)
         model_used = self._resolve_model(context)
@@ -119,6 +141,16 @@ class DanaAgent(DomainAgent):
         )
 
     def _build_response(self, task_type: str, message: str, entries: List[Dict]) -> Tuple[str, str]:
+        # v2 task types
+        if task_type == "daily_close":
+            return self._build_daily_close(message, entries), "daily_close"
+        if task_type == "readiness_decision":
+            return self._build_readiness(message, entries), "readiness_decision"
+        if task_type == "health_sync":
+            return self._build_health_sync(message, entries), "health_sync"
+        if task_type == "weekly_review_v2":
+            return self._build_weekly_review_v2(entries), "weekly_review_v2"
+        # v1 task types
         if task_type in ("meal_log", "calorie_query"):
             return self._build_meal_response(message), "meal_analysis"
         if task_type == "weight_log":
@@ -136,6 +168,123 @@ class DanaAgent(DomainAgent):
         if task_type == "nutrition_plan":
             return self._build_nutrition_plan_response(entries), "nutrition_plan"
         return self._build_daily_status_response(entries), "daily_status"
+
+    # ── v2 builders ──────────────────────────────────────────────────────────
+
+    def _build_daily_close(self, message: str, entries: List[Dict]) -> str:
+        state = self._compute_daily_state(entries)
+        health_today = self.health_bridge.get_today()
+        steps = health_today.get("steps", "?")
+        workout = "כן" if health_today.get("workouts_count", 0) > 0 or state["training_status"] == "בוצע" else "לא"
+        return (
+            f"🌙 סיכום יום\n\n"
+            f"חלבון: {state['protein_status']}g / {PROTEIN_GOAL}g\n"
+            f"קלוריות: {state['calorie_status']} / {CALORIE_GOAL}\n"
+            f"אימון: {workout}\n"
+            f"צעדים: {steps}\n\n"
+            f"✅ מה הלך טוב: {state['what_went_well']}\n"
+            f"⚠️ מה פגע: {state['what_hurt_progress']}\n"
+            f"📌 מחר: {state['tomorrow_focus']}\n"
+            f"💡 הצעד הטוב ביותר עכשיו: {state['best_next_action']}"
+        )
+
+    def _build_readiness(self, message: str, entries: List[Dict]) -> str:
+        r = self.health_bridge.compute_readiness(message)
+        state_he = {"push_day": "push_day — יום לדחוף", "maintain_day": "maintain_day — שמירה", "recovery_day": "recovery_day — שחזור"}
+        train_he = "כן" if r["should_train_today"] else "לא"
+        if r["recommended_intensity"] == "low" and r["should_train_today"]:
+            train_he = "כן-אבל-קל"
+        intensity_he = {"high": "גבוהה", "medium": "בינונית", "low": "נמוכה", "rest": "מנוחה"}.get(r["recommended_intensity"], r["recommended_intensity"])
+        return (
+            f"🔋 Readiness Check\n\n"
+            f"מצב: {state_he.get(r['readiness_state'], r['readiness_state'])}\n"
+            f"להתאמן היום: {train_he}\n"
+            f"עצימות מומלצת: {intensity_he}\n"
+            f"משך: {r['recommended_duration']} דקות\n"
+            f"Fallback: {r['fallback_option']}\n"
+            f"מיקוד תזונה היום: {r['nutrition_priority_today']}\n\n"
+            f"💬 {r['reasoning']}"
+        )
+
+    def _build_health_sync(self, message: str, entries: List[Dict]) -> str:
+        parsed = self.health_bridge.parse_from_message(message)
+        d = parsed.get("date", "?")
+        lines = [f"📡 Health Sync\n\nנרשם ל-{d}:"]
+        if parsed.get("steps"):
+            lines.append(f"- צעדים: {parsed['steps']}")
+        if parsed.get("sleep_hours"):
+            lines.append(f"- שינה: {parsed['sleep_hours']} שעות")
+        if parsed.get("workouts_count"):
+            lines.append(f"- אימון: {parsed.get('workout_minutes', 30)} דקות")
+        if parsed.get("weight"):
+            lines.append(f"- משקל: {parsed['weight']} ק\"ג")
+        if parsed.get("distance_km"):
+            lines.append(f"- מרחק: {parsed['distance_km']} ק\"מ")
+        lines.append("\n✅ סטטוס עודכן")
+        return "\n".join(lines)
+
+    def _build_weekly_review_v2(self, entries: List[Dict]) -> str:
+        days = self.health_bridge.get_last_n_days(7)
+
+        # Weight trend
+        weights = [d["weight"] for d in reversed(days) if d.get("weight")]
+        if len(weights) >= 2:
+            delta = round(weights[-1] - weights[0], 1)
+            weight_text = f"{weights[0]} → {weights[-1]} ({delta:+} ק\"ג)"
+        elif len(weights) == 1:
+            weight_text = f"{weights[0]} ק\"ג (שקילה אחת)"
+        else:
+            weight_text = "אין שקילות השבוע"
+
+        # Workout consistency
+        total_workouts = sum(d.get("workouts_count", 0) for d in days)
+        workout_score = min(1.0, total_workouts / 3.0)
+
+        # Steps consistency (days with 8000+)
+        days_8k = sum(1 for d in days if d.get("steps", 0) >= 8000)
+        steps_score = days_8k / max(len(days), 1)
+
+        # Protein consistency from tracker entries
+        cutoff = datetime.now() - timedelta(days=7)
+        week_entries = [e for e in entries if e['dt'] >= cutoff]
+        meal_entries = [e for e in week_entries if e.get('meal')]
+        daily_protein: Dict[str, float] = {}
+        for e in meal_entries:
+            d_key = e['dt'].date().isoformat()
+            daily_protein[d_key] = daily_protein.get(d_key, 0) + e['meal'].get('estimated_protein', 0)
+        good_protein_days = sum(1 for v in daily_protein.values() if v >= 100)
+        protein_score = good_protein_days / 7.0
+        avg_protein = int(sum(daily_protein.values()) / max(1, len(daily_protein))) if daily_protein else 0
+
+        # Adherence
+        adherence = round((workout_score + steps_score + protein_score) / 3 * 100)
+
+        # Strongest / weakest
+        scores = {"אימונים": workout_score, "צעדים": steps_score, "חלבון": protein_score}
+        strongest = max(scores, key=scores.get)
+        weakest = min(scores, key=scores.get)
+
+        # One change
+        changes = {
+            "אימונים": "להכניס 2-3 אימוני fallback קצרים לשבוע",
+            "צעדים": "לצאת להליכה של 20 דקות כל יום אחרי צהריים",
+            "חלבון": "לפתוח כל יום עם ארוחת חלבון ברורה (30g+)",
+        }
+        one_change = changes.get(weakest, "לשמור על עקביות")
+
+        return (
+            f"📈 Weekly Review v2\n\n"
+            f"⚖️ משקל: {weight_text}\n"
+            f"🏃 אימונים: {total_workouts}/7 (score: {workout_score:.2f})\n"
+            f"👣 צעדים: {days_8k} ימים עם 8k+ (score: {steps_score:.2f})\n"
+            f"🥩 חלבון: ~{avg_protein}g ממוצע (score: {protein_score:.2f})\n"
+            f"📊 Adherence: {adherence}%\n\n"
+            f"💪 הרגל חזק: {strongest}\n"
+            f"🔴 הדלף הגדול: {weakest}\n"
+            f"🎯 שינוי אחד לשבוע הבא: {one_change}"
+        )
+
+    # ── v1 builders ──────────────────────────────────────────────────────────
 
     def _build_meal_response(self, message: str) -> str:
         struct = self._estimate_meal(message)
