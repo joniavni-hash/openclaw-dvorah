@@ -17,7 +17,7 @@ from datetime import datetime
 from router import route_message
 from context_guard import context_status, emergency_compact
 from agent_executor import AgentExecutor
-from action_executor import execute_if_approved, send_response_if_ready
+from action_executor import execute_if_approved, send_response_if_ready, reset_send_gate
 from model_selector import select_model, ModelDecision
 
 # Feature flag — set AUTO_GIT_PUSH_ENABLED=false to disable
@@ -82,6 +82,9 @@ class ExecutionPipeline:
         execution_id = f"exec_{start_time.strftime('%Y%m%d_%H%M%S')}_{id(message)}"
         
         try:
+            # Reset single-send gate for this request
+            reset_send_gate()
+
             # Step 1: Route message 
             routing_result = route_message(message, channel, group_id)
             

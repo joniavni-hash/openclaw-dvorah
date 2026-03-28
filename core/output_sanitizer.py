@@ -42,7 +42,15 @@ _PLACEHOLDER_REPLACEMENTS = {
     "Research query processed": "🔍 בדיקה בתהליך",
 }
 
-# ── Process narration patterns — forbidden in user-facing output ──────────────
+# ── Forbidden section headers — entire section must be stripped ───────────────
+# Matches the header AND everything until the next header or end of text
+_FORBIDDEN_SECTION_HEADERS = re.compile(
+    r'(?m)^\s*\*{0,2}(Diagnosis|Implementation|Proof|Files changed|Files Changed|Commit hash?|Commit)\*{0,2}\s*:?[ \t]*\n'
+    r'(.*?)(?=(?:\n\s*\*{0,2}(?:Diagnosis|Implementation|Proof|Files changed|Files Changed|Commit hash?|Commit)\*{0,2}\s*:?[ \t]*\n)|\Z)',
+    re.IGNORECASE | re.DOTALL
+)
+
+# ── Process narration patterns — single-line removal ─────────────────────────
 _PROCESS_SPAM_PATTERNS = [
     r'(?m)^עכשיו אני[^\n]*\n?',
     r'(?m)^הנה מה שמצאתי[^\n]*\n?',
@@ -59,9 +67,6 @@ _PROCESS_SPAM_PATTERNS = [
     r'(?m)^I\'m checking[^\n]*\n?',
     r'(?m)^Running[^\n]*\n?',
     r'(?m)^Loading[^\n]*\n?',
-    r'(?m)^\*?\*?Diagnosis\*?\*?:?[^\n]*\n?',
-    r'(?m)^\*?\*?Implementation\*?\*?:?[^\n]*\n?',
-    r'(?m)^\*?\*?Proof\*?\*?:?[^\n]*\n?',
     r'(?m)^---+\s*\n',
 ]
 _PROCESS_SPAM_RE = [re.compile(p, re.IGNORECASE | re.MULTILINE)
@@ -149,10 +154,26 @@ def sanitize(text: str) -> str:
     return footer if footer else body
 
 
+def strip_forbidden_sections(text: str) -> str:
+    """Hard-remove Diagnosis/Implementation/Proof/Files changed/Commit sections and all their content."""
+    if not text:
+        return text
+    # Remove entire sections
+    text = _FORBIDDEN_SECTION_HEADERS.sub("", text)
+    # Also strip standalone header lines that weren't caught (no body after them)
+    text = re.sub(
+        r'(?m)^\s*\*{0,2}(Diagnosis|Implementation|Proof|Files changed|Files Changed|Commit hash?|Commit)\*{0,2}\s*:?[^\n]*\n?',
+        "", text, flags=re.IGNORECASE
+    )
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
 def strip_process_spam(text: str) -> str:
     """Remove forbidden process narration patterns."""
     if not text:
         return text
+    # Hard-strip forbidden sections first
+    text = strip_forbidden_sections(text)
     for pattern in _PROCESS_SPAM_RE:
         text = pattern.sub("", text)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
@@ -257,6 +278,11 @@ def shape_final_response(text: str, mode: str = "default",
     text = enforce_single_message(text, mode=mode)
     # 4. Footer guarantee
     text = ensure_footer(text, agent=agent, model=model, status=status)
+
+    body_check, _ = _split_footer(text)
+    if not body_check.strip():
+        # All content was stripped — return minimal acknowledgement + footer
+        text = ensure_footer("בוצע.", agent=agent, model=model, status=status)
 
     if not text.strip():
         raise ContractViolation("Empty response after enforcement")

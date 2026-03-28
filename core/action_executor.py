@@ -20,6 +20,44 @@ except ImportError:
     class ContractViolation(Exception): pass
 
 
+class SingleSendGate:
+    """
+    Per-request send gate. Enforces: exactly ONE message sent per request.
+    All paths that send to user must call acquire() first.
+    acquire() returns False if already sent — caller must block.
+    """
+    def __init__(self):
+        self._sent = False
+        self._sent_text: Optional[str] = None
+
+    def acquire(self) -> bool:
+        """Returns True if this is the first send. False = already sent, block."""
+        if self._sent:
+            return False
+        self._sent = True
+        return True
+
+    def record(self, text: str):
+        self._sent_text = text
+
+    def reset(self):
+        self._sent = False
+        self._sent_text = None
+
+    @property
+    def already_sent(self) -> bool:
+        return self._sent
+
+
+# Global per-request gate — reset at start of each pipeline execution
+_send_gate = SingleSendGate()
+
+
+def reset_send_gate():
+    """Call at the start of each new request/pipeline execution."""
+    _send_gate.reset()
+
+
 class ActionExecutor:
     def __init__(self, workspace_path: str = None):
         self.workspace = Path(workspace_path or os.environ.get("DVORAH_WORKSPACE", 
@@ -159,6 +197,15 @@ class ActionExecutor:
                 "reason": "No response text to send"
             }
         
+        # Single-send gate: block if already sent this request
+        if not _send_gate.acquire():
+            return {
+                "status": "blocked_duplicate_send",
+                "reason": "Single-send gate: message already sent this request",
+                "text": response_text,
+            }
+        _send_gate.record(response_text)
+
         # Send via appropriate channel
         if original_channel == "whatsapp" and original_sender:
             return self._send_whatsapp_response(response_text, original_sender)
@@ -275,3 +322,8 @@ def send_response_if_ready(execution_result: Dict, original_channel: str,
                           original_sender: str = None) -> Dict:
     """Global function to send responses when ready"""
     return action_executor.send_response_if_ready(execution_result, original_channel, original_sender)
+
+
+def reset_send_gate():
+    """Reset per-request single-send gate. Call at start of each pipeline execution."""
+    _send_gate.reset()
