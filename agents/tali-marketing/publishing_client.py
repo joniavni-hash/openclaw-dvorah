@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Publishing Client — handles draft creation and Postiz integration."""
+"""Publishing Client — handles draft creation and Postiz integration.
+
+Publishing invariant (enforced at save/schedule boundary):
+  - Platforms requiring media: instagram, tiktok, pinterest, facebook
+  - If media_attached != True for those platforms → BLOCK scheduling
+  - Only draft_blocked_missing_media or needs_media_review allowed without media
+"""
 
 import json
 import os
@@ -10,6 +16,9 @@ from typing import Dict, List, Optional
 
 WORKSPACE = Path(os.environ.get("DVORAH_WORKSPACE", Path.home() / ".openclaw" / "workspace"))
 
+# Platforms that require media — cannot be scheduled without it
+MEDIA_REQUIRED_PLATFORMS = {"instagram", "tiktok", "pinterest", "facebook"}
+
 
 class PublishingClient:
     DRAFTS_ROOT = WORKSPACE / "villa-lithos" / "publishing" / "drafts"
@@ -18,7 +27,10 @@ class PublishingClient:
     def build_payload(self, platform: str, caption: str, hashtags: str,
                       asset_refs: list, scheduled_time: Optional[str] = None,
                       cta: Optional[str] = None, approval_required: bool = True,
-                      autonomous_mode: bool = False) -> dict:
+                      autonomous_mode: bool = False,
+                      selected_asset: Optional[Dict] = None,
+                      media_attached: bool = False) -> dict:
+        """Build post payload. media_attached must be True for required platforms to be schedulable."""
         return {
             "id": f"draft_{uuid.uuid4().hex[:8]}",
             "platform": platform,
@@ -26,6 +38,8 @@ class PublishingClient:
             "hashtags": hashtags,
             "cta": cta or "",
             "asset_refs": asset_refs,
+            "selected_asset": selected_asset or {},
+            "media_attached": media_attached,
             "scheduled_time": scheduled_time,
             "created_at": datetime.now().isoformat(),
             "status": "draft",
@@ -42,10 +56,49 @@ class PublishingClient:
         filepath.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
         return filename
 
+    def schedule(self, payload: dict) -> dict:
+        """
+        Schedule a post. Enforces media invariant before scheduling.
+        Returns postiz_save_contract dict.
+        """
+        platform = payload.get("platform", "").lower()
+        media_attached = payload.get("media_attached", False)
+
+        # INVARIANT: block scheduling without media for required platforms
+        if platform in MEDIA_REQUIRED_PLATFORMS and not media_attached:
+            blocked = {**payload, "status": "draft_blocked_missing_media",
+                       "publishable": False}
+            self.save_draft(blocked)
+            return {
+                "draft_status": "draft_blocked_missing_media",
+                "postiz_id": None,
+                "platform": platform,
+                "media_attached": False,
+                "attached_filename": None,
+                "asset_source": None,
+                "publishable": False,
+                "error": "Media required for this platform — attach media before scheduling",
+            }
+
+        # Media present or not required — proceed
+        result = self.submit_to_postiz(payload)
+        postiz_id = result.get("postiz_id") or result.get("draft_id")
+        selected = payload.get("selected_asset", {})
+
+        contract = {
+            "draft_status": "scheduled" if result.get("status") != "local_draft" else "local_draft",
+            "postiz_id": postiz_id,
+            "platform": platform,
+            "media_attached": media_attached,
+            "attached_filename": selected.get("filename") or payload.get("asset_refs", [None])[0],
+            "asset_source": selected.get("source", "google_drive"),
+            "publishable": True,
+        }
+        return contract
+
     def get_draft_status(self, draft_id: str) -> dict:
         filepath = self.DRAFTS_ROOT / draft_id
         if not filepath.exists():
-            # Try with .json extension
             filepath = self.DRAFTS_ROOT / f"{draft_id}.json"
         if not filepath.exists():
             return {"status": "not_found", "draft_id": draft_id}
@@ -63,8 +116,14 @@ class PublishingClient:
             try:
                 data = json.loads(f.read_text(encoding="utf-8"))
                 if status_filter is None or data.get("status") == status_filter:
-                    drafts.append({"filename": f.name, "id": data.get("id"), "status": data.get("status"),
-                                   "platform": data.get("platform"), "created_at": data.get("created_at")})
+                    drafts.append({
+                        "filename": f.name,
+                        "id": data.get("id"),
+                        "status": data.get("status"),
+                        "platform": data.get("platform"),
+                        "media_attached": data.get("media_attached", False),
+                        "created_at": data.get("created_at"),
+                    })
             except Exception:
                 continue
         return drafts
@@ -73,11 +132,11 @@ class PublishingClient:
         payload["external_action_attempted"] = True
         if not self.POSTIZ_CONFIGURED:
             filename = self.save_draft(payload)
-            return {"status": "local_draft", "draft_id": filename, "message": "Postiz not configured"}
-
-        # Future: actual Postiz API call
+            return {"status": "local_draft", "draft_id": filename,
+                    "message": "Postiz not configured — saved locally"}
         try:
             filename = self.save_draft(payload)
-            return {"status": "local_draft", "draft_id": filename, "message": "Postiz not configured"}
+            return {"status": "local_draft", "draft_id": filename,
+                    "postiz_id": None, "message": "Saved as draft"}
         except Exception as e:
-            return {"status": "error", "draft_id": None, "error": str(e)}
+            return {"status": "error", "error": str(e)}

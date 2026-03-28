@@ -23,6 +23,7 @@ from analytics_reader import AnalyticsReader
 from asset_manager import AssetManager
 from publishing_client import PublishingClient
 from creative_qa import CreativeQA
+from media_resolver import MediaResolver, MEDIA_REQUIRED_PLATFORMS
 
 LARRY_SYSTEM = WORKSPACE / "villa-lithos-tiktok" / "larry-system"
 MARKETING_ROOT = WORKSPACE / "villa-lithos"
@@ -68,6 +69,7 @@ class TaliAgent(DomainAgent):
         self.asset_manager = AssetManager()
         self.publisher = PublishingClient()
         self.creative_qa = CreativeQA()
+        self.media_resolver = MediaResolver()
 
     def can_handle(self, message: str, context: Dict, attachments: List[str] = None) -> RoutingResult:
         score = self.keyword_match(message)
@@ -366,30 +368,77 @@ class TaliAgent(DomainAgent):
         )
 
     def _build_schedule_post_response(self, message: str, platform: str) -> str:
+        """
+        analyze → decide → create_copy → resolve_media → attach_media → save/schedule
+
+        Publishing invariant: if media_attached != True for required platform → block.
+        """
         p = platform.capitalize() if platform != "general" else "General"
-        # Extract time from message if present
         time_match = re.search(r'(\d{1,2}:\d{2})', message)
         scheduled_time = time_match.group(1) if time_match else "19:00"
 
+        # Infer pillar from message
+        pillar = "visual_escape"
+        for kw, pl in [("booking", "booking_intent"), ("dream", "dreaming_aspiration"),
+                       ("stay", "stay_experience"), ("escape", "visual_escape")]:
+            if kw in message.lower():
+                pillar = pl
+                break
+
+        caption = "(from latest draft)"
+        cta = "שלחו הודעה לפרטים וזמינות"
+        hashtags = ["#VillaLithos", "#GreekEscape", "#LuxuryVilla"]
+
+        # resolve_media stage
+        artifact = self.media_resolver.resolve_and_bind(
+            platform=platform, pillar=pillar, caption=caption,
+            cta=cta, hashtags=hashtags, scheduled_time=scheduled_time,
+        )
+
+        if not artifact.publishable:
+            return (
+                f"🚫 Schedule Blocked — {p}\n\n"
+                f"סטטוס: draft_blocked_missing_media\n"
+                f"סיבה: {artifact.error}\n\n"
+                f"לא ניתן לתזמן ללא media. יש לצרף קובץ לפני scheduling."
+            )
+
+        # attach_media → save/schedule
         payload = self.publisher.build_payload(
-            platform=platform,
-            caption="(from latest draft)",
-            hashtags="",
-            asset_refs=[],
+            platform=platform, caption=caption, hashtags=" ".join(hashtags),
+            asset_refs=[artifact.attached_filename] if artifact.attached_filename else [],
+            selected_asset=artifact.selected_asset,
+            media_attached=True,
             scheduled_time=scheduled_time,
             approval_required=True,
         )
-        result = self.publisher.submit_to_postiz(payload)
-        draft_id = result.get("draft_id", "unknown")
-        status = result.get("status", "unknown")
+        contract = self.publisher.schedule(payload)
 
         return (
-            f"🗓️ Schedule Draft — {p}\n\n"
+            f"🗓️ Schedule — {p}\n\n"
             f"זמן: {scheduled_time}\n"
-            f"Draft ID: {draft_id}\n"
-            f"סטטוס: {status}\n\n"
-            f"⚠️ נדרש אישור לפני תזמון"
+            f"Media: {artifact.attached_filename} ✅\n"
+            f"media_attached: {contract['media_attached']}\n"
+            f"publishable: {contract['publishable']}\n"
+            f"Draft ID: {contract['postiz_id']}\n"
+            f"סטטוס: {contract['draft_status']}\n\n"
+            f"⚠️ נדרש אישור לפני תזמון סופי"
         )
+
+    def validate_week_queue(self, queue: Optional[List[Dict]] = None) -> Dict:
+        """Validate this week's scheduled queue. Returns health report."""
+        if queue is None:
+            # Load from publishing dirs
+            queue = []
+            for d in [MARKETING_ROOT / "publishing" / "scheduled",
+                      MARKETING_ROOT / "publishing" / "drafts"]:
+                if d.exists():
+                    for f in d.glob("*.json"):
+                        try:
+                            queue.append(json.loads(f.read_text(encoding="utf-8")))
+                        except Exception:
+                            pass
+        return self.media_resolver.validate_week_queue(queue)
 
     def _build_autonomous_routine_response(self, message: str, platform: str) -> str:
         p = platform.capitalize() if platform != "general" else "General"
@@ -402,30 +451,45 @@ class TaliAgent(DomainAgent):
         hashtags = "#VillaLithos #GreekEscape #LuxuryVilla"
         cta = "שלחו הודעה לפרטים וזמינות"
 
-        # 3. Build and save publish draft
-        asset_refs = self.asset_manager.get_asset_refs("post", platform)
+        # 3. resolve_media → attach_media → save
+        pillar = signal.get("pillar", "visual_escape")
+        artifact = self.media_resolver.resolve_and_bind(
+            platform=platform, pillar=pillar,
+            caption=caption, cta=cta,
+            hashtags=["#VillaLithos", "#GreekEscape", "#LuxuryVilla"],
+            scheduled_time="19:00",
+        )
+
+        if not artifact.publishable:
+            return (
+                f"🚫 Autonomous Routine Blocked — {p}\n\n"
+                f"סטטוס: draft_blocked_missing_media\n"
+                f"סיבה: {artifact.error}"
+            )
+
         payload = self.publisher.build_payload(
-            platform=platform,
-            caption=caption,
+            platform=platform, caption=caption,
             hashtags=hashtags,
-            asset_refs=asset_refs.get("available", []),
+            asset_refs=[artifact.attached_filename] if artifact.attached_filename else [],
+            selected_asset=artifact.selected_asset,
+            media_attached=True,
             scheduled_time="19:00",
             cta=cta,
             approval_required=False,
             autonomous_mode=True,
         )
-        result = self.publisher.submit_to_postiz(payload)
-        draft_id = result.get("draft_id", "unknown")
-
+        contract = self.publisher.schedule(payload)
         snippet = caption[:80]
         return (
             f"🤖 Autonomous Routine — {p}\n\n"
             f"📊 Signal: {signal.get('what_worked', 'N/A')} (confidence: {signal.get('confidence', 'unknown')})\n"
             f"📝 Content: {snippet}\n"
-            f"📤 Draft: {draft_id}\n"
-            f"🗓️ Suggested time: 19:00\n\n"
-            f"Mode: routine (auto-approved)\n"
-            f"Next: awaiting asset confirmation or publish trigger"
+            f"🖼️ Media: {artifact.attached_filename} ✅\n"
+            f"media_attached: True\n"
+            f"publishable: {contract['publishable']}\n"
+            f"📤 Draft: {contract['postiz_id']}\n"
+            f"🗓️ זמן: 19:00\n\n"
+            f"Mode: autonomous (media bound)"
         )
 
     def _status_response(self, platform: str) -> str:
