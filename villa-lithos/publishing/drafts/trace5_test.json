@@ -1,0 +1,16 @@
+{
+  "platform": "instagram",
+  "copy": "test",
+  "hashtags": "",
+  "cta": "",
+  "asset_refs": [],
+  "selected_asset": {},
+  "media_attached": false,
+  "id": "trace5_test",
+  "created_at": "2026-03-28T00:00:00",
+  "approval_required": false,
+  "external_action_attempted": false,
+  "autonomous_mode": false,
+  "status": "draft_blocked_missing_media",
+  "publishable": false
+}

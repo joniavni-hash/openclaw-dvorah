@@ -1,0 +1,24 @@
+{
+  "platform": "facebook",
+  "copy": "נשארו מעט שבועות",
+  "hashtags": "#VillaLithos",
+  "cta": "",
+  "asset_refs": [
+    "Copy of IMG_0139.jpg"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1E9JHXZ2fW4vs8OqDSoiNEo4O2AHrBOpO",
+    "filename": "Copy of IMG_0139.jpg",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/Copy of IMG_0139.jpg",
+    "postiz_media_id": "postiz_media_b5a23330"
+  },
+  "media_attached": true,
+  "scheduled_time": "12:00",
+  "id": "draft_261183ba",
+  "created_at": "2026-03-28T12:49:40.725851",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": false
+}

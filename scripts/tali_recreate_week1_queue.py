@@ -64,6 +64,7 @@ WEEK1_POSTS: List[Dict[str, Any]] = [
         "pillar": "dreaming_aspiration",
         "scheduled_time": "2026-04-01 20:00",
         "caption": "POV: הטיול הקבוצתי שלכם עולה פחות ממה שחשבתם, ונראה הרבה יותר טוב.",
+        "preferred_asset_id": "1img8688",  # IMG_8688.JPG — avoid duplicate with day 2
     },
     {
         "platform": "pinterest",
@@ -89,6 +90,7 @@ def recreate_week1(dry_run: bool = False) -> Dict[str, Any]:
             cta=CTA,
             hashtags=HASHTAGS,
             scheduled_time=post["scheduled_time"],
+            preferred_asset_id=post.get("preferred_asset_id"),
         )
 
         if not artifact.publishable:
