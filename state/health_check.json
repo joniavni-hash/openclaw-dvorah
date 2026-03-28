@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-26T07:28:19.503096",
+  "timestamp": "2026-03-28T07:23:23.536313",
   "checks": {
     "outlook": {
       "status": "missing_credentials",
@@ -24,14 +24,14 @@
       "note": "Run web_search to test"
     },
     "cron": {
-      "status": "ok",
-      "ok": true
+      "status": "missing_dashboard_cron",
+      "ok": false
     }
   },
   "summary": {
     "total": 6,
-    "ok": 3,
-    "failed": 2,
+    "ok": 2,
+    "failed": 3,
     "unknown": 1
   }
 }

@@ -1,12 +1,12 @@
 {
   "version": "1.0",
-  "last_updated": "2026-03-26T07:00:09.204219Z",
+  "last_updated": "2026-03-28T07:00:07.626438Z",
   "integrations": {
     "outlook": {
       "enabled": true,
       "connected": true,
-      "last_ok_at": "2026-03-26T07:00:07.599178",
-      "last_check_at": "2026-03-26T07:00:07.599178",
+      "last_ok_at": "2026-03-28T07:00:06.663269",
+      "last_check_at": "2026-03-28T07:00:06.663269",
       "required_scopes": [
         "Mail.Read",
         "Mail.Send",
@@ -29,8 +29,8 @@
     "whatsapp": {
       "enabled": true,
       "connected": true,
-      "last_ok_at": "2026-03-26T07:00:09.059199",
-      "last_check_at": "2026-03-26T07:00:09.059199",
+      "last_ok_at": "2026-03-28T07:00:07.445295",
+      "last_check_at": "2026-03-28T07:00:07.445295",
       "required_scopes": [
         "send_messages",
         "read_messages"
@@ -48,8 +48,8 @@
     "telegram": {
       "enabled": true,
       "connected": true,
-      "last_ok_at": "2026-03-26T07:00:09.059316",
-      "last_check_at": "2026-03-26T07:00:09.059316",
+      "last_ok_at": "2026-03-28T07:00:07.445404",
+      "last_check_at": "2026-03-28T07:00:07.445404",
       "required_scopes": [
         "send_messages",
         "read_messages"
@@ -69,7 +69,7 @@
       "enabled": true,
       "connected": false,
       "last_ok_at": null,
-      "last_check_at": "2026-03-26T07:00:09.059379",
+      "last_check_at": "2026-03-28T07:00:07.445469",
       "required_scopes": [
         "adwords"
       ],
@@ -88,7 +88,7 @@
       "enabled": true,
       "connected": false,
       "last_ok_at": null,
-      "last_check_at": "2026-03-26T07:00:09.059435",
+      "last_check_at": "2026-03-28T07:00:07.445527",
       "required_scopes": [
         "api_access"
       ],
@@ -108,8 +108,8 @@
     "gog_cli": {
       "enabled": true,
       "connected": true,
-      "last_ok_at": "2026-03-26T07:00:09.059493",
-      "last_check_at": "2026-03-26T07:00:09.059493",
+      "last_ok_at": "2026-03-28T07:00:07.445589",
+      "last_check_at": "2026-03-28T07:00:07.445589",
       "required_scopes": [
         "gmail",
         "calendar",
@@ -131,7 +131,7 @@
       "enabled": true,
       "connected": false,
       "last_ok_at": "2026-03-24T08:00:00Z",
-      "last_check_at": "2026-03-26T07:00:09.204199",
+      "last_check_at": "2026-03-28T07:00:07.626418",
       "required_scopes": [
         "network_access"
       ],

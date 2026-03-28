@@ -1,20 +1,10 @@
 # X/Twitter Feed Summary
-Generated: 2026-03-24 19:01 UTC
+Generated: 2026-03-26 22:05 UTC
 
 ## 🏢 Labs
 
 ### @AnthropicAI
-- We invited Claude users to share how they use AI, what they dream it could make possible, and what they fear it might do.
-
-Nearly 81,000 people responded in one weekâthe largest qualitative study of its kind.
-
-Read more: https://t.co/tmp2RnZxRm
-- We find that since November 2025, consumer use has become less concentrated: the top 10 tasks now make up 19% of conversations, down from 24%. We also see a rise in personal queries, and continued convergence in adoption rates in the US.
-
-Read more: https://t.co/9UUq3UsnLi
-- New from the Anthropic Economic Index: how peopleâs use of Claude changes with experience.
-
-Longer-term users are more likely to iterate carefully with Claude, and less likely to hand it full autonomy. They attempt higher-value tasks, and receive more successful responses. h...
+_(no tweets fetched)_
 
 ### @OpenAI
 _(no tweets fetched)_
@@ -77,4 +67,4 @@ _(no tweets fetched)_
 _(no tweets fetched)_
 
 ---
-Total: 3 tweets from 19 accounts | 18 errors
+Total: 0 tweets from 19 accounts | 19 errors

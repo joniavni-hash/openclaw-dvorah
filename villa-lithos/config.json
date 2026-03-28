@@ -1,70 +1,42 @@
 {
-  "page_id": "917185001468846",
-  "page_access_token": "EAAWSTwgxxZBMBQ2OeKQ971frHGh7PvhxaikqwIZCnJMEZCEJpQCaEpI4SZCBvwiNL7SLzVd46ouTqVJZBT9Xp070lG05elBOvYMOgU6e3I17ydY48ZAjaA6xvwdiHcOenmh51xcI7ZAOZBmueIuU44lX19zNK1RogYWLhys731YvLRrqK6Bbk0ZBneJ0Xj5NZASmFOToOuHZBS7b5GYCDF8BFNi8mZCQ59i1z9ZAnKUoyrwUyCYTfG5Dm97Nk",
-  "album_id": "122095285455115407",
-  "posts_per_week": 4,
-  "language": "en",
-  "target_audience": "Israeli and European (especially British)",
-  "location": "Porto Rafti, Greece",
-  "villa_name": "Villa Lithos",
-  "photos": [
-    {
-      "id": "122095279851115407",
-      "name": "Paradise view",
-      "url": "https://scontent.ftlv27-1.fna.fbcdn.net/v/t39.30808-6/577601502_122095279875115407_1417648700651136884_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=4714a5&_nc_ohc=55zXIDH8K0IQ7kNvwE-0iYN&_nc_oc=AdmAQcY9MM-0y-u_W7LKen6V6sBlxkzaSfMXHugaLQ79hrGlGwUkE1XYvj8awIH9AtI&_nc_zt=23&_nc_ht=scontent.ftlv27-1.fna&edm=AC7C4-wEAAAA&oh=00_AfzeXncMWjhjB9incTCDwvFKyA0VgF8wZkxc_zF-6C9Waw&oe=69B66F84"
-    },
-    {
-      "id": "122095279857115407",
-      "name": "Paradise view 2",
-      "url": "https://scontent.ftlv18-1.fna.fbcdn.net/v/t39.30808-6/577590341_122095279869115407_3093053270043943899_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=4714a5&_nc_ohc=icPQWbOuTrAQ7kNvwFKQPy-&_nc_oc=Adl7S3RQOAYMZY7V111-9e-A9xCMC1uWO4UqNi44aUcQVV74kVwP-u4bq7uNhDNeC_w&_nc_zt=23&_nc_ht=scontent.ftlv18-1.fna&edm=AC7C4-wEAAAA&oh=00_AfxLrmRD5QYcHOfS6MbrKFpjflVu7yFL7Jocptw5Y25Z4A&oe=69B6691D"
-    },
-    {
-      "id": "122095280055115407",
-      "name": "Bath with view to the beach",
-      "url": "https://scontent.fsdv1-2.fna.fbcdn.net/v/t39.30808-6/577673239_122095280061115407_223460699489362019_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=4714a5&_nc_ohc=gY_ZtaNgBAIQ7kNvwH2er_S&_nc_oc=Adl2uB04Qp_IJ1CMZc4Af4LazDYSFU9eD4tAQX9AegBWePmONCP-OynRW7wqpczmWcw&_nc_zt=23&_nc_ht=scontent.fsdv1-2.fna&edm=AC7C4-wEAAAA&oh=00_AfzdlAzbITkSb0EKfpZxEEDZvaZKWPscpBeAOVeahv5TvQ&oe=69B684F7"
-    },
-    {
-      "id": "122095280097115407",
-      "name": "Infinity Pool",
-      "url": "https://scontent.fsdv1-2.fna.fbcdn.net/v/t39.30808-6/577396549_122095280109115407_2371725202121415194_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=4714a5&_nc_ohc=eYeqRLwLX38Q7kNvwHADsuc&_nc_oc=AdnppWQ9Arn1w2mo0GV4mo_JfYEsGjdvkxdg9UastSEnGiVuUkZLnJjiQdv_TmQ9d7c&_nc_zt=23&_nc_ht=scontent.fsdv1-2.fna&edm=AC7C4-wEAAAA&oh=00_AfxiJWQk-rgATwV-fuR8olt1avuqZQmkBUzsWmfN5pQgsQ&oe=69B68484"
-    },
-    {
-      "id": "122095280121115407",
-      "name": "Paddle Court",
-      "url": "https://scontent.fsdv1-2.fna.fbcdn.net/v/t39.30808-6/578083397_122095280127115407_8838288588597283846_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=4714a5&_nc_ohc=5CMMEHHmoFgQ7kNvwGwSEOa&_nc_oc=AdkP-VootQfXbcADERk_xlk2Sqd7cMEW6jce6MDHR_64bpT1DZnR-9XZ-mMIT8xfgJQ&_nc_zt=23&_nc_ht=scontent.fsdv1-2.fna&edm=AC7C4-wEAAAA&oh=00_AfyY9VAB9niew41UpbEQv-YeQPPQyEGa2OciREyu5cgJaw&oe=69B67562"
-    },
-    {
-      "id": "122095280181115407",
-      "name": "Path to the Sauna",
-      "url": "https://scontent.ftlv27-1.fna.fbcdn.net/v/t39.30808-6/577537477_122095280187115407_7673707026298942775_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=4714a5&_nc_ohc=ImOtP1otQa8Q7kNvwEF-mO_&_nc_oc=AdmRqkuh6Nhjfz6jMz5aquZnbH_RRLgf1YPpnsmjzgyGM103vPN5-UGCex-HY5SAM64&_nc_zt=23&_nc_ht=scontent.ftlv27-1.fna&edm=AC7C4-wEAAAA&oh=00_Afy77DfMCX4ECS_NEc5lYRLcv-BWqO-B1nXu1Xnh2cEOQw&oe=69B68083"
-    },
-    {
-      "id": "122095280343115407",
-      "name": "Villa Lithos exterior",
-      "url": "https://scontent.fsdv1-2.fna.fbcdn.net/v/t39.30808-6/577405586_122095280349115407_302412354021666695_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=4714a5&_nc_ohc=clbP7O2uFYcQ7kNvwE6O0O0&_nc_oc=Adnc6gt8U6qVeznjGAFu5R7LeQO49SkmVX2O5DjhD9o5eUc4H3a1jeF-OtH-wYqGCtQ&_nc_zt=23&_nc_ht=scontent.fsdv1-2.fna&edm=AC7C4-wEAAAA&oh=00_AfxoFJJVz_F2EFKCb1d9M5RAbNuMbd8hD4T29LoCV9_6xg&oe=69B66B6E"
-    },
-    {
-      "id": "122095280529115407",
-      "name": "Outdoor Kitchen",
-      "url": "https://scontent.ftlv27-1.fna.fbcdn.net/v/t39.30808-6/577612261_122095280547115407_3577929030416650351_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=4714a5&_nc_ohc=DVdI_kKvURsQ7kNvwF_8puz&_nc_oc=AdlBOz49G9M7Gt6u4MedzEplb73tDcGavw5m1AtwQ6NE7BAyOqKEDTxmX6zoWkyVjr8&_nc_zt=23&_nc_ht=scontent.ftlv27-1.fna&edm=AC7C4-wEAAAA&oh=00_Afyuzaw1_8MfnOJzCgEZLayY_L8QLPCFxljAjZhK-5lRKg&oe=69B66E81"
-    },
-    {
-      "id": "122095280625115407",
-      "name": "Living Room",
-      "url": "https://scontent.fsdv1-2.fna.fbcdn.net/v/t39.30808-6/577550645_122095280631115407_6608082636042267462_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=4714a5&_nc_ohc=hJAsdoN8F2YQ7kNvwEZYweM&_nc_oc=Adm5CkCrjmft_yFIqD9EF80fmXss2NLRjIF-w7NlKdz58vQ99VYDGQirqpCHMM0GBHA&_nc_zt=23&_nc_ht=scontent.fsdv1-2.fna&edm=AC7C4-wEAAAA&oh=00_Afy90ZmXcqrjWgzgCDTmYkvgCZZJb5HsTTtcSt3m1I07wA&oe=69B66353"
-    },
-    {
-      "id": "122095280985115407",
-      "name": "Sauna",
-      "url": "https://scontent.ftlv27-1.fna.fbcdn.net/v/t39.30808-6/577554939_122095280991115407_5098484399311430263_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=4714a5&_nc_ohc=qhcdhrjHO3MQ7kNvwHfpNnl&_nc_oc=Adn4fYC-ovnnJZHpkcSyv60wGO44-cWofUejG1LeZwo36qymEl8pu4GyNIEqXPExKQE&_nc_zt=23&_nc_ht=scontent.ftlv27-1.fna&edm=AC7C4-wEAAAA&oh=00_AfytUyq0uu_AsOw49A2R0U6Yrzd5hZYap8ZKEIcCHrleOA&oe=69B66385"
-    },
-    {
-      "id": "122095281279115407",
-      "name": "View from above",
-      "url": "https://scontent.ftlv18-1.fna.fbcdn.net/v/t39.30808-6/577018251_122095281285115407_4875224163291606303_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=4714a5&_nc_ohc=r8WJeMpyDCkQ7kNvwEp8HJa&_nc_oc=AdmmhPgFj8boEUx4TrH37y8M_14kRzPMvi-DCL896uHwHOcI7lW-mKvlUYFVPlWCcgw&_nc_zt=23&_nc_ht=scontent.ftlv18-1.fna&edm=AC7C4-wEAAAA&oh=00_AfwDVRU8skGE0006goetVqXqpdoDYGmKeJQbAIa5aC98PQ&oe=69B68692"
-    }
+  "property": "Villa Lithos",
+  "goal": "להביא תנועה איכותית ולידים להזמנות",
+  "cta_url": "www.villalithosgreece.com/welcome",
+  "platforms": [
+    "instagram",
+    "facebook",
+    "tiktok",
+    "pinterest"
   ],
-  "last_photo_index": 0,
-  "last_post_date": "2026-03-09T06:14:56.490Z",
-  "instagram_id": "17841477928189795"
+  "publishing_hub": "postiz",
+  "asset_source": "google_drive",
+  "content_pillars": [
+    "visual_escape",
+    "stay_experience",
+    "dreaming_aspiration",
+    "booking_intent"
+  ],
+  "cadence": {
+    "instagram": "3 posts + 3-5 stories / week",
+    "facebook": "2-3 posts / week",
+    "tiktok": "3 videos / week",
+    "pinterest": "4-6 pins / week"
+  },
+  "suggested_schedule": {
+    "instagram": [
+      "Tue",
+      "Thu",
+      "Sun"
+    ],
+    "facebook": [
+      "Wed",
+      "Sat"
+    ],
+    "tiktok": [
+      "Mon",
+      "Thu",
+      "Sun"
+    ],
+    "pinterest": "spread daily"
+  }
 }
