@@ -45,28 +45,6 @@ def _auto_git_push(execution_id: str) -> None:
     except Exception as e:
         print(f"[git_sync] exception: {e}", file=sys.stderr)
 
-# ── Domain → Agent ownership table ───────────────────────────────────────────
-# Any domain listed here MUST route through its agent.
-# Direct LLM response is BLOCKED for owned domains — no exceptions.
-DOMAIN_AGENT_OWNERS: Dict[str, str] = {
-    "fitness":          "dana",
-    "marketing":        "tali",
-    "legal":            "masha",
-    "group_retrieval":  "odya",
-    "whatsapp_group":   "odya",
-    "research":         "tzofit",
-    "automation":       "eti",
-    "scheduling":       "eti",
-}
-
-
-def _build_footer(agent_name: str, model_short: str, status_label: str) -> str:
-    """Single canonical footer builder. Called only at send boundary."""
-    if not agent_name:
-        return ""
-    return f"סוכנת: {agent_name} | מודל: {model_short} | מצב: {status_label}"
-
-
 class ExecutionPipeline:
     def __init__(self, workspace_path: str = None):
         self.workspace = Path(workspace_path or os.environ.get("DVORAH_WORKSPACE", 
@@ -103,46 +81,9 @@ class ExecutionPipeline:
             routing_result["model"]          = model_decision.tier
             routing_result["model_decision"] = model_decision.to_dict()
 
-            # Step 3: Invariant guard — owned domains MUST route through their agent.
-            # If routing says "handle_direct" but domain is owned → FAIL CLOSED.
-            routing_action = routing_result["routing_decision"]["action"]
-            classified_domain = routing_result["classification"]["domain"]
-            expected_agent = DOMAIN_AGENT_OWNERS.get(classified_domain)
-
-            if routing_action == "handle_direct" and expected_agent:
-                # VIOLATION: pipeline tried to bypass agent for owned domain
-                violation_record = {
-                    "execution_id": execution_id,
-                    "timestamp": start_time.isoformat(),
-                    "status": "invariant_violation",
-                    "classified_domain": classified_domain,
-                    "expected_agent": expected_agent,
-                    "routing_action": routing_action,
-                    "direct_llm_response_blocked": True,
-                    "agent_execution_started": False,
-                    "agent_execution_completed": False,
-                    "footer_applied": False,
-                    "send_path": "blocked",
-                    "message": message[:100] + "..." if len(message) > 100 else message,
-                }
-                self._log_execution(violation_record)
-                return {
-                    "status": "invariant_violation",
-                    "execution_id": execution_id,
-                    "error": f"FAIL CLOSED: domain '{classified_domain}' requires agent '{expected_agent}', direct response blocked",
-                    "classified_domain": classified_domain,
-                    "expected_agent": expected_agent,
-                    "direct_llm_response_blocked": True,
-                    "fallback_action": "routing_correction_required",
-                    "execution_summary": violation_record,
-                }
-
             # Step 3: Execute based on routing decision
-            if routing_action == "handle_direct" and not expected_agent:
+            if routing_result["routing_decision"]["action"] == "handle_direct":
                 result = self._handle_direct(message, routing_result, metadata)
-            elif routing_action == "handle_direct" and expected_agent:
-                # Should never reach here due to guard above, but defensive
-                raise RuntimeError(f"Invariant escape: {classified_domain} → {expected_agent}")
             else:
                 # Use real agent executor instead of dummy responses
                 agent_name = routing_result["routing_decision"]["agent"]
@@ -163,22 +104,13 @@ class ExecutionPipeline:
             response_result = send_response_if_ready(execution_result, channel, 
                                                    metadata.get("sender_id") if metadata else None)
             
-            # Step 7: Log execution — full trace metadata
-            _agent_used = routing_result["routing_decision"].get("agent", "direct")
-            _routing_action = routing_result["routing_decision"].get("action", "unknown")
+            # Step 7: Log execution
             execution_record = {
                 "execution_id": execution_id,
                 "timestamp": start_time.isoformat(),
                 "message": message[:100] + "..." if len(message) > 100 else message,
                 "channel": channel,
                 "group_id": group_id,
-                "classified_domain": classified_domain,
-                "expected_agent": expected_agent,
-                "agent_execution_started": _routing_action == "route_to_agent",
-                "agent_execution_completed": result.get("status") not in ("error", "unknown", None),
-                "direct_llm_response_blocked": bool(expected_agent) and _routing_action == "route_to_agent",
-                "footer_applied": bool(response_result.get("text", "")),
-                "send_path": "agent_pipeline" if _agent_used != "direct" else "direct",
                 "routing": routing_result["classification"],
                 "context_status": ctx_status,
                 "agent_response": result.get("status", "unknown"),
@@ -194,27 +126,6 @@ class ExecutionPipeline:
             exec_status = execution_result.get("status", "")
             if exec_status in AUTO_GIT_PUSH_STATUSES:
                 _auto_git_push(execution_id)
-
-            # Step 9: Footer guarantee at send boundary
-            # Footer is appended here — single canonical location, cannot be skipped.
-            _response_text = response_result.get("text", "")
-            if _response_text:
-                _agent_name = result.get("agent", routing_result["routing_decision"].get("agent", "דבורה"))
-                _md = result.get("metadata", {})
-                _model_used = _md.get("model_used", "")
-                if "opus" in _model_used:
-                    _model_short = "opus"
-                elif "haiku" in _model_used:
-                    _model_short = "haiku"
-                elif "sonnet" in _model_used:
-                    _model_short = "sonnet"
-                else:
-                    _model_short = model_decision.tier
-                _status_label = execution_result.get("status", "direct_send")
-                _footer = _build_footer(_agent_name, _model_short, _status_label)
-                if _footer and not _response_text.strip().endswith(_footer.strip()):
-                    response_result["text"] = f"{_response_text}\n\n{_footer}"
-                execution_record["footer_applied"] = bool(_footer)
 
             return {
                 "status": "success",
