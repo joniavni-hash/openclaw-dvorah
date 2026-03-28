@@ -1,0 +1,25 @@
+{
+  "id": "draft_23f3ccfd",
+  "platform": "tiktok",
+  "copy": "המקום הזה מרגיש לא אמיתי. חופשה אחת טובה השנה, אולי זאת בדיוק היא.",
+  "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla",
+  "cta": "www.villalithosgreece.com/welcome",
+  "asset_refs": [
+    "Copy of IMG_0054.jpg"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1uqHNar2WOBZMuV0RaXOnF_VV7OFeu9l7",
+    "filename": "Copy of IMG_0054.jpg",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/Copy of IMG_0054.jpg",
+    "postiz_media_id": "f5ddace8-475e-4dfc-9234-92a91c888f92"
+  },
+  "media_attached": true,
+  "scheduled_time": "2026-03-29 20:00",
+  "created_at": "2026-03-28T13:25:38.901585",
+  "status": "draft",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": true
+}

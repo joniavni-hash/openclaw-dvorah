@@ -16,13 +16,27 @@ from typing import Dict, List, Optional
 
 WORKSPACE = Path(os.environ.get("DVORAH_WORKSPACE", Path.home() / ".openclaw" / "workspace"))
 
+# Auto-load secrets/.env if POSTIZ_API_KEY not already in env
+_env_file = WORKSPACE / "secrets" / ".env"
+if _env_file.exists() and not os.environ.get("POSTIZ_API_KEY"):
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
+
+POSTIZ_BASE_URL = os.environ.get("POSTIZ_BASE_URL", "https://api.postiz.com/public/v1")
+
 # Platforms that require media — cannot be scheduled without it
 MEDIA_REQUIRED_PLATFORMS = {"instagram", "tiktok", "pinterest", "facebook"}
 
 
 class PublishingClient:
     DRAFTS_ROOT = WORKSPACE / "villa-lithos" / "publishing" / "drafts"
-    POSTIZ_CONFIGURED = bool(os.environ.get("POSTIZ_API_KEY"))
+
+    @property
+    def POSTIZ_CONFIGURED(self):
+        return bool(os.environ.get("POSTIZ_API_KEY"))
 
     def build_payload(self, platform: str, caption: str, hashtags: str,
                       asset_refs: list, scheduled_time: Optional[str] = None,
@@ -134,9 +148,82 @@ class PublishingClient:
             filename = self.save_draft(payload)
             return {"status": "local_draft", "draft_id": filename,
                     "message": "Postiz not configured — saved locally"}
+
         try:
-            filename = self.save_draft(payload)
-            return {"status": "local_draft", "draft_id": filename,
-                    "postiz_id": None, "message": "Saved as draft"}
+            import requests
+            api_key = os.environ["POSTIZ_API_KEY"]
+            headers = {"Authorization": api_key}
+
+            # 1. Upload media if local_path available
+            media_ids = []
+            sel = payload.get("selected_asset", {}) or {}
+            local_path = sel.get("local_path")
+            if local_path:
+                lp = Path(local_path)
+                if lp.exists() and lp.stat().st_size > 17:  # skip placeholders
+                    mime = sel.get("mime_type", "image/jpeg")
+                    with open(lp, "rb") as f:
+                        up = requests.post(
+                            f"{POSTIZ_BASE_URL}/upload",
+                            headers=headers,
+                            files={"file": (lp.name, f, mime)},
+                            timeout=60,
+                        )
+                    if up.status_code in (200, 201):
+                        media_ids = [up.json().get("id") or up.json().get("path", "")]
+                    else:
+                        filename = self.save_draft(payload)
+                        return {"status": "local_draft_upload_failed", "draft_id": filename,
+                                "error": f"upload {up.status_code}: {up.text[:200]}"}
+
+            # 2. Get integrations to find correct integration ID
+            integ_resp = requests.get(f"{POSTIZ_BASE_URL}/integrations",
+                                      headers=headers, timeout=10)
+            integrations = integ_resp.json() if integ_resp.status_code == 200 else []
+            platform = payload.get("platform", "").lower()
+            integration_id = None
+            for integ in (integrations if isinstance(integrations, list) else []):
+                if integ.get("identifier", "").lower() == platform and not integ.get("disabled"):
+                    integration_id = integ.get("id")
+                    break
+
+            if not integration_id:
+                filename = self.save_draft(payload)
+                return {"status": "local_draft_no_integration", "draft_id": filename,
+                        "error": f"No active Postiz integration for {platform}"}
+
+            # 3. Schedule post
+            scheduled_time = payload.get("scheduled_time")
+            post_body = {
+                "integrationId": integration_id,
+                "content": payload.get("copy") or payload.get("caption", ""),
+                "date": scheduled_time,
+                "settings": {},
+            }
+            if media_ids:
+                post_body["media"] = [{"id": mid} for mid in media_ids if mid]
+
+            post_resp = requests.post(
+                f"{POSTIZ_BASE_URL}/posts",
+                headers={**headers, "Content-Type": "application/json"},
+                json=post_body,
+                timeout=30,
+            )
+
+            if post_resp.status_code in (200, 201):
+                result = post_resp.json()
+                postiz_post_id = result.get("id") or result.get("postId")
+                payload["postiz_post_id"] = postiz_post_id
+                payload["status"] = "scheduled"
+                filename = self.save_draft(payload)
+                return {"status": "scheduled", "draft_id": filename,
+                        "postiz_id": postiz_post_id, "integration_id": integration_id}
+            else:
+                filename = self.save_draft(payload)
+                return {"status": f"postiz_error_{post_resp.status_code}",
+                        "draft_id": filename,
+                        "error": post_resp.text[:300]}
+
         except Exception as e:
-            return {"status": "error", "error": str(e)}
+            filename = self.save_draft(payload)
+            return {"status": "local_draft", "draft_id": filename, "error": str(e)}

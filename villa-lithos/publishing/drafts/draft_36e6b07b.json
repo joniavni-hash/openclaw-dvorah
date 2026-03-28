@@ -1,0 +1,25 @@
+{
+  "id": "draft_36e6b07b",
+  "platform": "pinterest",
+  "copy": "A bedroom view that makes the whole stay feel slower, calmer, better.",
+  "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla",
+  "cta": "www.villalithosgreece.com/welcome",
+  "asset_refs": [
+    "pin3_bedroom.jpg"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1pin3bedroom",
+    "filename": "pin3_bedroom.jpg",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/pin3_bedroom.jpg",
+    "postiz_media_id": "f5cec0a9-0aee-462b-889a-ec86f1b80e63"
+  },
+  "media_attached": true,
+  "scheduled_time": "2026-03-30 11:00",
+  "created_at": "2026-03-28T13:24:33.324826",
+  "status": "draft",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": true
+}

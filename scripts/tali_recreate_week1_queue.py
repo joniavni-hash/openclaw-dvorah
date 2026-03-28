@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -27,6 +28,15 @@ from typing import Any, Dict, List
 ROOT = Path(__file__).resolve().parent.parent
 TALI_DIR = ROOT / "agents" / "tali-marketing"
 sys.path.insert(0, str(TALI_DIR))
+
+# Load secrets/.env if POSTIZ_API_KEY not already set
+_env_file = ROOT / "secrets" / ".env"
+if _env_file.exists() and not os.environ.get("POSTIZ_API_KEY"):
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 from media_resolver import MediaResolver  # type: ignore
 from publishing_client import PublishingClient  # type: ignore

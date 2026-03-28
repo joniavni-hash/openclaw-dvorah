@@ -1,0 +1,25 @@
+{
+  "id": "draft_59ecc86f",
+  "platform": "facebook",
+  "copy": "אם בא לכם סוף שבוע שקט עם נוף, בריכה ותחושת חופשה אמיתית, בדקו זמינות עכשיו.",
+  "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla",
+  "cta": "www.villalithosgreece.com/welcome",
+  "asset_refs": [
+    "Copy of IMG_0139.jpg"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1E9JHXZ2fW4vs8OqDSoiNEo4O2AHrBOpO",
+    "filename": "Copy of IMG_0139.jpg",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/Copy of IMG_0139.jpg",
+    "postiz_media_id": "002d27b1-3822-46bf-b085-5e7894041131"
+  },
+  "media_attached": true,
+  "scheduled_time": "2026-03-31 12:00",
+  "created_at": "2026-03-28T13:24:34.138911",
+  "status": "draft",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": true
+}

@@ -1,0 +1,25 @@
+{
+  "id": "draft_965fced7",
+  "platform": "tiktok",
+  "copy": "POV: הטיול הקבוצתי שלכם עולה פחות ממה שחשבתם, ונראה הרבה יותר טוב.",
+  "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla",
+  "cta": "www.villalithosgreece.com/welcome",
+  "asset_refs": [
+    "IMG_8688.JPG"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1img8688",
+    "filename": "IMG_8688.JPG",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/IMG_8688.JPG",
+    "postiz_media_id": "24a2e1ba-230e-42c5-8466-1b36012a2e13"
+  },
+  "media_attached": true,
+  "scheduled_time": "2026-04-01 20:00",
+  "created_at": "2026-03-28T13:25:45.420721",
+  "status": "draft",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": true
+}

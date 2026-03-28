@@ -1,0 +1,25 @@
+{
+  "id": "draft_33215bf8",
+  "platform": "pinterest",
+  "copy": "Pool, light, quiet, and a view that sells the trip before the words do.",
+  "hashtags": "#VillaLithos #GreekEscape #LuxuryVilla",
+  "cta": "www.villalithosgreece.com/welcome",
+  "asset_refs": [
+    "IMG_8363.jpeg"
+  ],
+  "selected_asset": {
+    "source": "google_drive",
+    "asset_id": "1img8363",
+    "filename": "IMG_8363.jpeg",
+    "mime_type": "image/jpeg",
+    "local_path": "/home/jonia/.openclaw/workspace/villa-lithos/assets/raw/IMG_8363.jpeg",
+    "postiz_media_id": "6ec79d7b-abef-4bb8-9abf-d17f26a090b6"
+  },
+  "media_attached": true,
+  "scheduled_time": "2026-04-02 11:00",
+  "created_at": "2026-03-28T13:25:47.276128",
+  "status": "draft",
+  "approval_required": false,
+  "external_action_attempted": true,
+  "autonomous_mode": true
+}
