@@ -163,6 +163,7 @@ class Router:
                 "scheduling":       "eti",
                 "marketing":        "tali",
                 "automation":       "eti",
+                "cost_usage":       "cost_reporter",
             }
             return {
                 "domain": best,

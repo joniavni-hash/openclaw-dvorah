@@ -57,6 +57,7 @@ DOMAIN_AGENT_OWNERS: Dict[str, str] = {
     "research":         "tzofit",
     "automation":       "eti",
     "scheduling":       "eti",
+    "cost_usage":       "cost_reporter",
 }
 
 
