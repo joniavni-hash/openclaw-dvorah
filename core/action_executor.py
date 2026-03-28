@@ -243,11 +243,8 @@ class ActionExecutor:
         else:
             return ""
 
-        # Transparency footer — appended to every non-empty response
-        if text and agent_result:
-            footer = self._build_footer(agent_result, execution_result)
-            if footer:
-                text = f"{text}\n\n{footer}"
+        # Footer is appended at send boundary (shape_final_response / execution_pipeline step 9)
+        # Do NOT append here to avoid duplicates.
 
         return text
 
