@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """
-output_sanitizer.py — Strip internal technical content before sending to user.
+output_sanitizer.py — DVORAH_OUTPUT_CONTRACT enforcement.
 
-Called by action_executor.send_response_if_ready() on any text going to WhatsApp/DM.
-Never touches the transparency footer (lines containing ' · ').
+Contract (PROMPT_CONTRACTS/DVORAH_OUTPUT_CONTRACT.md):
+  1. Single message only
+  2. Short and direct (≤7 content lines for user-facing, ≤30 for analysis)
+  3. No process narration
+  4. Footer mandatory at send boundary
+  5. Block and reshape if violated — never send raw violation
+
+Called by action_executor.send_response_if_ready() on any text going to user.
 """
 
 import re
-from typing import Optional
+from typing import Optional, Tuple
 
-# Patterns that indicate internal/debug content
+# ── Blocklist: internal content that must never reach users ───────────────────
 _BLOCKLIST = [
-    # Python identifiers / function calls
-    r"[a-z]+_[a-z]+_[a-z]+\(",     # snake_case function calls (3+ segments)
-    r"\b_[a-z]+_[a-z]+\b",         # _private_methods
-    # Status enum values
+    r"[a-z]+_[a-z]+_[a-z]+\(",
+    r"\b_[a-z]+_[a-z]+\b",
     r"\bno_response_needed\b",
     r"\banalysis_ready\b",
     r"\bgroup_retrieval_response\b",
@@ -22,20 +26,15 @@ _BLOCKLIST = [
     r"\bdraft_completed\b",
     r"\bblocked_by_qa\b",
     r"\bdirect_response\b",
-    # Git artifacts
     r"\bHEAD:\s*[0-9a-f]{7,}\b",
     r"\bcommit\s+[0-9a-f]{7,}\b",
     r"\bexec_\d{8}_\d{6}_\d+\b",
-    # Model IDs
     r"anthropic/claude-[\w\-\.]+",
-    # File paths
     r"[a-z]+/[a-z_]+\.py",
-    # Routing/impl notes (lines only)
     r"^.*\bimplementation note.*$",
     r"^.*\brouting.*internal.*$",
 ]
 
-# Placeholder texts that should not reach users — replace with empty
 _PLACEHOLDER_REPLACEMENTS = {
     "Standard conversation handled": "",
     "Fitness message received (processing pending):": "✅",
@@ -43,43 +42,100 @@ _PLACEHOLDER_REPLACEMENTS = {
     "Research query processed": "🔍 בדיקה בתהליך",
 }
 
+# ── Process narration patterns — forbidden in user-facing output ──────────────
+_PROCESS_SPAM_PATTERNS = [
+    r'(?m)^עכשיו אני[^\n]*\n?',
+    r'(?m)^הנה מה שמצאתי[^\n]*\n?',
+    r'(?m)^בוא נבדוק[^\n]*\n?',
+    r'(?m)^אני (בודק|בודקת|אעשה|מריץ|מריצה|טוען|טוענת|שולף|שולפת)[^\n]*\n?',
+    r'(?m)^ממשיך ל[^\n]*\n?',
+    r'(?m)^מריץ[^\n]*\n?',
+    r'(?m)^בודק[^\n]*\n?',
+    r'(?m)^טוען[^\n]*\n?',
+    r'(?m)^שולף[^\n]*\n?',
+    r'(?m)^כרגע אני[^\n]*\n?',
+    r'(?m)^Now I\'m[^\n]*\n?',
+    r'(?m)^Let me check[^\n]*\n?',
+    r'(?m)^I\'m checking[^\n]*\n?',
+    r'(?m)^Running[^\n]*\n?',
+    r'(?m)^Loading[^\n]*\n?',
+    r'(?m)^\*?\*?Diagnosis\*?\*?:?[^\n]*\n?',
+    r'(?m)^\*?\*?Implementation\*?\*?:?[^\n]*\n?',
+    r'(?m)^\*?\*?Proof\*?\*?:?[^\n]*\n?',
+    r'(?m)^---+\s*\n',
+]
+_PROCESS_SPAM_RE = [re.compile(p, re.IGNORECASE | re.MULTILINE)
+                    for p in _PROCESS_SPAM_PATTERNS]
 
-def sanitize(text: str) -> str:
-    """
-    Clean user-facing text:
-    - Replace known placeholders
-    - Strip lines with internal identifiers
-    - Preserve footer (lines with ' · ')
-    - Return stripped result
-    """
-    if not text:
-        return text
+# ── Length limits ─────────────────────────────────────────────────────────────
+MAX_CONTENT_LINES_DEFAULT  = 7    # user-facing short answers
+MAX_CONTENT_LINES_ANALYSIS = 30   # fitness analysis, research, legal
+MAX_CHARS_DEFAULT           = 3500
+MAX_CHARS_ANALYSIS          = 5000
 
-    # Separate footer from body
+# ── Unexpected scripts ────────────────────────────────────────────────────────
+_UNEXPECTED_SCRIPTS = [
+    re.compile(r'[\u0400-\u04FF]{4,}'),
+    re.compile(r'[\u4E00-\u9FFF]{4,}'),
+    re.compile(r'[\u0900-\u097F]{4,}'),
+]
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _split_footer(text: str) -> Tuple[str, str]:
+    """Separate body from footer line(s)."""
     lines = text.split("\n")
-    footer_lines = []
-    body_lines = []
+    footer_lines, body_lines = [], []
     for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("_") and stripped.endswith("_") and " · " in stripped:
+        s = line.strip()
+        if s.startswith("_") and s.endswith("_") and (" · " in s or "סוכנת:" in s):
             footer_lines.append(line)
         else:
             body_lines.append(line)
+    return "\n".join(body_lines), "\n".join(footer_lines)
 
-    body = "\n".join(body_lines)
 
-    # Apply placeholder replacements
+def _build_default_footer(agent: str = "דבורה", model: str = "sonnet",
+                           status: str = "direct_send") -> str:
+    return f"סוכנת: {agent} | מודל: {model} | מצב: {status}"
+
+
+def _has_footer(text: str) -> bool:
+    for line in text.split("\n"):
+        s = line.strip()
+        if s.startswith("_") and s.endswith("_") and " · " in s:
+            return True
+        if "סוכנת:" in s and "מודל:" in s:
+            return True
+    return False
+
+
+def _has_process_spam(text: str) -> bool:
+    for pattern in _PROCESS_SPAM_RE:
+        if pattern.search(text):
+            return True
+    return False
+
+
+def _count_content_lines(body: str) -> int:
+    return sum(1 for l in body.split("\n") if l.strip())
+
+
+# ── Core functions ────────────────────────────────────────────────────────────
+
+def sanitize(text: str) -> str:
+    """Strip internal content. Preserve footer."""
+    if not text:
+        return text
+    body, footer = _split_footer(text)
     for placeholder, replacement in _PLACEHOLDER_REPLACEMENTS.items():
         body = body.replace(placeholder, replacement)
-
-    # Apply blocklist patterns (line-by-line for line patterns, global for inline)
     cleaned_lines = []
     for line in body.split("\n"):
         skip = False
         for pattern in _BLOCKLIST:
             if re.search(pattern, line, re.IGNORECASE | re.MULTILINE):
-                # If the whole line is internal, drop it
-                # If it's partial, strip the match
                 cleaned = re.sub(pattern, "", line, flags=re.IGNORECASE).strip()
                 if not cleaned:
                     skip = True
@@ -87,153 +143,122 @@ def sanitize(text: str) -> str:
                 line = cleaned
         if not skip:
             cleaned_lines.append(line)
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(cleaned_lines)).strip()
+    if footer and body:
+        return body + "\n\n" + footer
+    return footer if footer else body
 
-    body = "\n".join(cleaned_lines).strip()
 
-    # Collapse multiple blank lines
-    body = re.sub(r"\n{3,}", "\n\n", body)
+def strip_process_spam(text: str) -> str:
+    """Remove forbidden process narration patterns."""
+    if not text:
+        return text
+    for pattern in _PROCESS_SPAM_RE:
+        text = pattern.sub("", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
-    # Rejoin with footer
-    if footer_lines and body:
-        return body + "\n\n" + "\n".join(footer_lines)
-    elif footer_lines:
-        return "\n".join(footer_lines)
-    return body
+
+def enforce_single_message(text: str, mode: str = "default") -> str:
+    """
+    Enforce single-message contract:
+    - Truncate to char limit if over
+    - Truncate to line limit if over (mode=default: 7 lines, analysis: 30)
+    - Never split
+    """
+    if not text:
+        return text
+    body, footer = _split_footer(text)
+    max_lines = MAX_CONTENT_LINES_ANALYSIS if mode == "analysis" else MAX_CONTENT_LINES_DEFAULT
+    max_chars = MAX_CHARS_ANALYSIS if mode == "analysis" else MAX_CHARS_DEFAULT
+
+    # Line limit
+    content_lines = [l for l in body.split("\n") if l.strip()]
+    if len(content_lines) > max_lines:
+        body = "\n".join(content_lines[:max_lines])
+
+    # Char limit
+    if len(body) > max_chars:
+        chunk = body[:max_chars]
+        last_break = max(chunk.rfind(". "), chunk.rfind(".\n"),
+                         chunk.rfind("? "), chunk.rfind("! "))
+        if last_break > max_chars * 0.6:
+            body = body[:last_break + 1]
+        else:
+            body = chunk.rstrip() + "..."
+
+    result = body.rstrip()
+    if footer:
+        result = result + "\n\n" + footer
+    return result
+
+
+def ensure_footer(text: str, agent: str = "דבורה", model: str = "sonnet",
+                  status: str = "direct_send") -> str:
+    """Guarantee footer exists. If missing, append default footer."""
+    if _has_footer(text):
+        return text
+    footer = _build_default_footer(agent, model, status)
+    return text.rstrip() + "\n\n" + footer
 
 
 def is_clean(text: str) -> bool:
-    """Returns True if text passes sanitization unchanged."""
     return sanitize(text) == text
 
 
-# Cyrillic / other unexpected scripts — flag if primary content is not Hebrew/Latin/Arabic numerals
-_UNEXPECTED_SCRIPTS = [
-    re.compile(r'[\u0400-\u04FF]{4,}'),   # Cyrillic
-    re.compile(r'[\u4E00-\u9FFF]{4,}'),   # CJK
-    re.compile(r'[\u0900-\u097F]{4,}'),   # Devanagari
-]
-
 def has_unexpected_language(text: str) -> bool:
-    """Returns True if text contains unexpected non-Hebrew/non-Latin script blocks."""
     for pattern in _UNEXPECTED_SCRIPTS:
         if pattern.search(text):
             return True
     return False
 
 
-# ── Single-message enforcement ────────────────────────────────────────────────
+# ── Contract enforcement: block-and-reshape ───────────────────────────────────
 
-MAX_CHARS_DEFAULT = 3500   # Stay under 4000-char WhatsApp chunk limit
-MAX_CHARS_ANALYSIS = 5000  # For analysis/research/legal — still single chunk if possible
+class ContractViolation(Exception):
+    pass
 
-def enforce_single_message(text: str, mode: str = "default") -> str:
+
+def check_violations(text: str, mode: str = "default") -> list:
+    """Return list of violation strings (empty = clean)."""
+    violations = []
+    body, footer = _split_footer(text)
+    if _has_process_spam(text):
+        violations.append("process_narration")
+    if not _has_footer(text):
+        violations.append("missing_footer")
+    max_lines = MAX_CONTENT_LINES_ANALYSIS if mode == "analysis" else MAX_CONTENT_LINES_DEFAULT
+    if _count_content_lines(body) > max_lines:
+        violations.append(f"too_many_lines:{_count_content_lines(body)}>{max_lines}")
+    if len(text) > (MAX_CHARS_ANALYSIS if mode == "analysis" else MAX_CHARS_DEFAULT):
+        violations.append("too_long")
+    return violations
+
+
+def shape_final_response(text: str, mode: str = "default",
+                          agent: str = "דבורה", model: str = "sonnet",
+                          status: str = "direct_send") -> str:
     """
-    Enforce single-message output discipline.
-
-    - If text is within limit: return as-is.
-    - If over limit: truncate to last sentence boundary + add truncation note.
-    - Never splits into multiple messages — caller gets ONE string.
-    - mode: "default" (3500 chars) | "analysis" (5000 chars)
-    """
-    if not text:
-        return text
-
-    limit = MAX_CHARS_ANALYSIS if mode == "analysis" else MAX_CHARS_DEFAULT
-
-    if len(text) <= limit:
-        return text
-
-    # Separate footer before truncating
-    lines = text.split("\n")
-    footer = ""
-    body_lines = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("_") and stripped.endswith("_") and " · " in stripped:
-            footer = line
-        else:
-            body_lines.append(line)
-
-    body = "\n".join(body_lines)
-
-    # Truncate to limit minus room for note + footer
-    reserve = len(footer) + 60
-    truncate_at = limit - reserve
-
-    if len(body) <= truncate_at:
-        truncated = body
-    else:
-        # Find last sentence boundary before truncate_at
-        chunk = body[:truncate_at]
-        last_period = max(chunk.rfind(". "), chunk.rfind(".\n"), chunk.rfind("? "), chunk.rfind("! "))
-        if last_period > truncate_at * 0.6:
-            truncated = body[:last_period + 1]
-        else:
-            truncated = chunk.rstrip() + "..."
-
-    result = truncated.rstrip()
-    if footer:
-        result = result + "\n\n" + footer
-    return result
-
-
-# ── Process spam filter ───────────────────────────────────────────────────────
-
-import re as _re
-
-_PROCESS_SPAM_PATTERNS = [
-    # Hebrew process narration
-    r'^עכשיו אני[^\n]*\n?',
-    r'^הנה מה שמצאתי[^\n]*\n?',
-    r'^בוא נבדוק[^\n]*\n?',
-    r'^אני אעשה[^\n]*\n?',
-    r'^ממשיך ל[^\n]*\n?',
-    r'^מריץ[^\n]*\n?',
-    r'^בודק[^\n]*\n?',
-    r'^טוען[^\n]*\n?',
-    r'^שולף[^\n]*\n?',
-    r'^כרגע אני[^\n]*\n?',
-    # English process narration
-    r'(?m)^Now I\'m[^\n]*\n?',
-    r'(?m)^Let me check[^\n]*\n?',
-    r'(?m)^I\'m checking[^\n]*\n?',
-    r'(?m)^Running[^\n]*\n?',
-    r'(?m)^Loading[^\n]*\n?',
-    # Stage headers that are process not answer
-    r'(?m)^\*?Diagnosis\*?:[^\n]*\n?',
-    r'(?m)^\*?Implementation\*?:[^\n]*\n?',
-    r'(?m)^\*?Proof\*?:[^\n]*\n?',
-    r'(?m)^---+\s*\n',
-]
-
-_PROCESS_SPAM_COMPILED = [_re.compile(p, _re.IGNORECASE | _re.MULTILINE)
-                           for p in _PROCESS_SPAM_PATTERNS]
-
-
-def strip_process_spam(text: str) -> str:
-    """Remove process narration patterns from user-facing text."""
-    if not text:
-        return text
-    for pattern in _PROCESS_SPAM_COMPILED:
-        text = pattern.sub('', text)
-    # Collapse 3+ blank lines
-    text = _re.sub(r'\n{3,}', '\n\n', text)
-    return text.strip()
-
-
-def shape_final_response(text: str, mode: str = "default") -> str:
-    """
-    Full output contract enforcement pipeline:
-    1. Sanitize internal content
-    2. Strip process spam
-    3. Enforce single-message length
-    Returns one clean, direct message.
-
-    mode: "default" | "group" | "analysis"
+    Full output contract enforcement pipeline (DVORAH_OUTPUT_CONTRACT.md):
+      1. Sanitize internal content
+      2. Strip process spam
+      3. Enforce single-message length + line count
+      4. Guarantee footer (append if missing — never block on footer alone)
+    Returns one clean, contract-compliant message.
+    Raises ContractViolation only if text is empty after cleanup.
     """
     if not text:
         return text
+
+    # 1. Sanitize
     text = sanitize(text)
+    # 2. Strip process spam
     text = strip_process_spam(text)
-    text = enforce_single_message(text, mode="analysis" if mode == "analysis" else "default")
+    # 3. Length enforcement
+    text = enforce_single_message(text, mode=mode)
+    # 4. Footer guarantee
+    text = ensure_footer(text, agent=agent, model=model, status=status)
+
+    if not text.strip():
+        raise ContractViolation("Empty response after enforcement")
+
     return text

@@ -14,9 +14,10 @@ from typing import Dict, List, Optional, Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 try:
-    from output_sanitizer import shape_final_response as _shape
+    from output_sanitizer import shape_final_response as _shape, ContractViolation
 except ImportError:
-    def _sanitize(text): return text  # fallback
+    def _shape(text, **kw): return text
+    class ContractViolation(Exception): pass
 
 
 class ActionExecutor:
@@ -128,12 +129,29 @@ class ActionExecutor:
                 "reason": f"Execution status: {execution_result['status']}"
             }
         
-        # Prepare response text (pass agent_result for footer)
+        # Prepare response text — full contract enforcement at send boundary
         agent_result = getattr(self, '_last_agent_result', {})
         raw_text = self._prepare_response_text(execution_result, agent_result)
         domain = agent_result.get("domain", "") if isinstance(agent_result, dict) else ""
-        mode = "analysis" if domain in ("legal", "research") else "default"
-        response_text = _shape(raw_text, mode=mode)
+        mode = "analysis" if domain in ("legal", "research", "fitness") else "default"
+
+        # Extract agent/model for footer
+        metadata = agent_result.get("metadata", {}) if isinstance(agent_result, dict) else {}
+        model_used = metadata.get("model_used", "")
+        if "opus" in model_used:
+            model_short = "opus"
+        elif "haiku" in model_used:
+            model_short = "haiku"
+        else:
+            model_short = "sonnet"
+        agent_name = agent_result.get("agent", "דבורה") if isinstance(agent_result, dict) else "דבורה"
+        exec_status = execution_result.get("status", "direct_send")
+
+        try:
+            response_text = _shape(raw_text, mode=mode, agent=agent_name,
+                                   model=model_short, status=exec_status)
+        except ContractViolation:
+            return {"status": "no_response_needed", "reason": "contract_violation_empty_after_enforcement"}
         
         if not response_text:
             return {
