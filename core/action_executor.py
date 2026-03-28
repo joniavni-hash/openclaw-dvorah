@@ -141,6 +141,13 @@ class ActionExecutor:
                     "reason": "Message doesn't require response",
                 }
         
+        elif agent_result.get("domain") == "cost_usage" and status == "executed":
+            return {
+                "status": "completed",
+                "action": "direct_response",
+                "details": agent_result.get("action_taken") or agent_result.get("summary", ""),
+            }
+
         elif agent_name == "צופית":
             # Research tasks
             return {

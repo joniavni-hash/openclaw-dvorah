@@ -60,6 +60,8 @@ class AgentExecutor:
             return self._handle_tali(message, routing_result, metadata)
         elif agent_name == "eti":
             return self._handle_eti(message, routing_result, metadata)
+        elif agent_name == "cost_reporter" or classification.get("domain") == "cost_usage":
+            return self._handle_cost_usage(message, routing_result, metadata)
         else:
             return {
                 "status": "routed",
@@ -281,6 +283,29 @@ class AgentExecutor:
                 "action": "system_check",
             },
             "metadata": _meta(routing_result.get("model", "tier1"), "system_automation"),
+        }
+
+
+    def _handle_cost_usage(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
+        """Anthropic usage/cost reporter."""
+        import sys
+        sys.path.insert(0, str(self.workspace))
+        try:
+            from integrations.anthropic_usage import get_today_anthropic_usage, format_usage_response
+            usage = get_today_anthropic_usage()
+            response_text = format_usage_response(usage)
+        except Exception as e:
+            response_text = f"שגיאה בשליפת נתוני עלות: {e}"
+        return {
+            "status": "executed",
+            "agent": "דבורה",
+            "domain": "cost_usage",
+            "response_type": "cost_report",
+            "requires_approval": False,
+            "summary": response_text,
+            "action_taken": response_text,
+            "data_logged": True,
+            "metadata": _meta(routing_result.get("model", "tier1"), "cost_reporting"),
         }
 
 

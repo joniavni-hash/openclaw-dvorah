@@ -97,6 +97,11 @@ class Router:
                 r"שיווק|marketing|פרסום|advertising",
                 r"וילה|villa|lithos|ליתוס",
             ],
+            "cost_usage": [
+                r"כמה בזבזת|כמה עלו הטוקנים|כמה עלה אנתרופיק",
+                r"עלות.*היום|היום.*עלות|כמה.*טוקנ",
+                r"token.?cost|usage.*today",
+            ],
             "automation": [
                 r"סטטוס.*מערכת|system.*status|health.*check",
                 r"בריאות.*מערכת|system.*health",
@@ -117,6 +122,7 @@ class Router:
     DOMAIN_TIERS: Dict[str, str] = {
         "legal":            "tier2",   # PR1: was tier3 — downgraded
         "whatsapp_group":   "tier1",   # always cheap
+        "cost_usage":       "tier1",
         "group_retrieval":  "tier1",   # retrieval is cheap
         "fitness":          "tier1",
         "research":         "tier2",
