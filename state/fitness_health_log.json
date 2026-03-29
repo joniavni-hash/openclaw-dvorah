@@ -43,5 +43,20 @@
     "weight": 71.8,
     "source": "manual",
     "updated_at": "2026-03-27T23:32:26.893251"
+  },
+  {
+    "date": "2026-03-29",
+    "steps": 8432,
+    "active_calories": 0,
+    "workouts_count": 0,
+    "workout_minutes": 0,
+    "distance_km": 0.0,
+    "standing_hours": 0,
+    "sleep_hours": 7.2,
+    "resting_hr": 68,
+    "hrv": null,
+    "weight": 79.5,
+    "source": "apple_health",
+    "updated_at": "2026-03-29T15:15:52.301934"
   }
 ]
