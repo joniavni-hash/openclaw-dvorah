@@ -37,7 +37,17 @@ def safe_cron_edit(old_text: str, new_text: str, file_path: str = None) -> bool:
         return False
 
 def add_integration_health_job() -> bool:
-    """Add integration health check job if it doesn't exist"""
+    """Add integration health check job if it doesn't exist.
+    
+    NOTE (OPS/NOTIFICATION_ROUTING_FIX.md): The 07:00 Telegram health digest
+    is DISABLED by policy. This function will NOT re-create it automatically.
+    Infra health is ops_only — never auto-sent to user-facing channels.
+    """
+    # POLICY: health digest is ops_only — never auto-create user-facing job
+    print("[safe_cron_edit] ⛔ integration-health-check creation blocked: ops_only per NOTIFICATION_ROUTING_FIX.md")
+    return False
+
+    # --- DISABLED BLOCK BELOW (kept for reference) ---
     try:
         cron_manager = CronJobManager()
         

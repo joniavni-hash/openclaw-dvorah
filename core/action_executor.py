@@ -13,6 +13,16 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "OPS"))
+
+# Notification routing guard — enforces OPS/NOTIFICATION_ROUTING_FIX.md
+try:
+    from notification_routing_guard import check_dana_channel, is_health_digest_allowed
+    _ROUTING_GUARD_LOADED = True
+except ImportError:
+    _ROUTING_GUARD_LOADED = False
+    def check_dana_channel(ch): return "whatsapp"
+    def is_health_digest_allowed(explicit=False): return explicit
 try:
     from output_sanitizer import shape_final_response as _shape, ContractViolation
 except ImportError:
@@ -212,6 +222,12 @@ class ActionExecutor:
                 "text": response_text,
             }
         _send_gate.record(response_text)
+
+        # Notification routing guard (OPS/NOTIFICATION_ROUTING_FIX.md)
+        agent_name = (agent_result or {}).get("agent", "").lower() if hasattr(self, '_last_agent_result') else ""
+        is_dana = "dana" in agent_name or "fitness" in agent_name
+        if is_dana and original_channel:
+            original_channel = check_dana_channel(original_channel)
 
         # Send via appropriate channel
         if original_channel == "whatsapp" and original_sender:
