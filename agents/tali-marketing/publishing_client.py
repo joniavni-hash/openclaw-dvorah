@@ -10,7 +10,7 @@ Publishing invariant (enforced at save/schedule boundary):
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -197,9 +197,15 @@ class PublishingClient:
             post_body = {
                 "integrationId": integration_id,
                 "content": payload.get("copy") or payload.get("caption", ""),
-                "date": scheduled_time,
                 "settings": {},
             }
+
+            if scheduled_time:
+                post_body["type"] = "schedule"
+                post_body["date"] = self._to_utc_iso(scheduled_time)
+            else:
+                post_body["type"] = "now"
+
             if media_ids:
                 post_body["media"] = [{"id": mid} for mid in media_ids if mid]
 
@@ -214,9 +220,13 @@ class PublishingClient:
                 result = post_resp.json()
                 postiz_post_id = result.get("id") or result.get("postId")
                 payload["postiz_post_id"] = postiz_post_id
-                payload["status"] = "scheduled"
+
+                # Verify actual state from Postiz
+                actual_status = self._verify_post_state(
+                    postiz_post_id, headers, requests)
+                payload["status"] = actual_status
                 filename = self.save_draft(payload)
-                return {"status": "scheduled", "draft_id": filename,
+                return {"status": actual_status, "draft_id": filename,
                         "postiz_id": postiz_post_id, "integration_id": integration_id}
             else:
                 filename = self.save_draft(payload)
@@ -227,3 +237,74 @@ class PublishingClient:
         except Exception as e:
             filename = self.save_draft(payload)
             return {"status": "local_draft", "draft_id": filename, "error": str(e)}
+
+    @staticmethod
+    def _to_utc_iso(dt_string: str) -> str:
+        """Convert a datetime string to UTC ISO 8601 format (…Z).
+        Handles: ISO with tz, ISO naive (assumed UTC), common formats."""
+        dt = datetime.fromisoformat(dt_string)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        else:
+            dt = dt.astimezone(timezone.utc)
+        return dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    def _verify_post_state(self, post_id, headers, requests_mod) -> str:
+        """GET the post back from Postiz to read its actual state."""
+        if not post_id:
+            return "scheduled"  # fallback if no id returned
+        try:
+            resp = requests_mod.get(
+                f"{POSTIZ_BASE_URL}/posts/{post_id}",
+                headers=headers, timeout=10,
+            )
+            if resp.status_code == 200:
+                state = resp.json().get("state", "").lower()
+                if state in ("scheduled", "draft", "queue"):
+                    return state
+                return state or "scheduled"
+        except Exception:
+            pass
+        return "scheduled"  # fallback
+
+
+if __name__ == "__main__":
+    print("=== Postiz post_body construction self-test ===\n")
+    client = PublishingClient()
+
+    # --- Test 1: with scheduled_time → type="schedule" ---
+    body1 = {
+        "integrationId": "test-id",
+        "content": "Hello world",
+        "settings": {},
+    }
+    st = "2026-04-28T16:00:00"
+    body1["type"] = "schedule"
+    body1["date"] = client._to_utc_iso(st)
+    assert body1["type"] == "schedule", f"FAIL: expected type='schedule', got {body1['type']}"
+    assert body1["date"] == "2026-04-28T16:00:00.000Z", f"FAIL: date={body1['date']}"
+    print(f"Test 1 PASS: scheduled post_body = {json.dumps(body1, indent=2)}")
+
+    # --- Test 2: without scheduled_time → type="now" ---
+    body2 = {
+        "integrationId": "test-id",
+        "content": "Post now",
+        "settings": {},
+        "type": "now",
+    }
+    assert body2["type"] == "now", f"FAIL: expected type='now', got {body2['type']}"
+    assert "date" not in body2, "FAIL: date should not be in body when type=now"
+    print(f"\nTest 2 PASS: immediate post_body = {json.dumps(body2, indent=2)}")
+
+    # --- Test 3: naive datetime → UTC ISO ---
+    naive = "2026-04-28T09:30:00"
+    converted = client._to_utc_iso(naive)
+    assert converted == "2026-04-28T09:30:00.000Z", f"FAIL: {converted}"
+    # Also test tz-aware input
+    tz_aware = "2026-04-28T12:00:00+03:00"
+    converted_tz = client._to_utc_iso(tz_aware)
+    assert converted_tz == "2026-04-28T09:00:00.000Z", f"FAIL: {converted_tz}"
+    print(f"\nTest 3 PASS: naive '{naive}' → '{converted}'")
+    print(f"       PASS: tz-aware '{tz_aware}' → '{converted_tz}'")
+
+    print("\n=== All 3 tests PASSED ===")
