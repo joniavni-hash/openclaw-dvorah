@@ -1,39 +1,39 @@
 {
-  "last_updated": "2026-03-28T07:00:07.628083",
+  "last_updated": "2026-03-29T07:00:04.373610",
   "quick_status": {
     "outlook": {
       "connected": true,
-      "checked_at": "2026-03-28T07:00:06.663269",
+      "checked_at": "2026-03-29T07:00:03.335591",
       "reason": null
     },
     "whatsapp": {
       "connected": true,
-      "checked_at": "2026-03-28T07:00:07.445295",
+      "checked_at": "2026-03-29T07:00:04.185045",
       "reason": null
     },
     "telegram": {
       "connected": true,
-      "checked_at": "2026-03-28T07:00:07.445404",
+      "checked_at": "2026-03-29T07:00:04.185096",
       "reason": null
     },
     "google_ads": {
       "connected": false,
-      "checked_at": "2026-03-28T07:00:07.445469",
+      "checked_at": "2026-03-29T07:00:04.185123",
       "reason": "not_implemented"
     },
     "brave_search": {
       "connected": false,
-      "checked_at": "2026-03-28T07:00:07.445527",
+      "checked_at": "2026-03-29T07:00:04.185146",
       "reason": "missing_api_key"
     },
     "gog_cli": {
       "connected": true,
-      "checked_at": "2026-03-28T07:00:07.445589",
+      "checked_at": "2026-03-29T07:00:04.185170",
       "reason": null
     },
     "tailscale": {
       "connected": false,
-      "checked_at": "2026-03-28T07:00:07.626418",
+      "checked_at": "2026-03-29T07:00:04.372110",
       "reason": "not_implemented"
     }
   },

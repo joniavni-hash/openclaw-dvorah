@@ -1,125 +1,112 @@
 {
-  "generated_at": "2026-03-22T19:21:38.964909+00:00",
+  "generated_at": "2026-03-29T04:26:17.131540+00:00",
   "period_days": 30,
-  "total_sessions": 91,
-  "total_response_pairs": 2298,
+  "total_sessions": 22,
+  "total_response_pairs": 440,
   "model_stats": {
-    "claude-haiku-4-5": {
-      "count": 25,
-      "avg_latency": 3.3,
-      "median_latency": 0.36,
-      "p90_latency": 13.72,
-      "p99_latency": 20.28,
-      "avg_tool_calls": 0.2
-    },
-    "delivery-mirror": {
-      "count": 6,
-      "avg_latency": 1.15,
-      "median_latency": 0.81,
-      "p90_latency": 2.46,
-      "p99_latency": 3.24,
-      "avg_tool_calls": 1.33
-    },
-    "gpt-4o": {
-      "count": 6,
-      "avg_latency": 6.7,
-      "median_latency": 6.98,
-      "p90_latency": 7.4,
-      "p99_latency": 7.76,
+    "claude-3-5-haiku-20241022": {
+      "count": 1,
+      "avg_latency": 0.31,
+      "median_latency": 0.31,
+      "p90_latency": 0.31,
+      "p99_latency": 0.31,
       "avg_tool_calls": 0
     },
+    "delivery-mirror": {
+      "count": 3,
+      "avg_latency": 0.33,
+      "median_latency": 0.28,
+      "p90_latency": 0.5,
+      "p99_latency": 0.55,
+      "avg_tool_calls": 2.33
+    },
     "opus": {
-      "count": 805,
-      "avg_latency": 10.08,
-      "median_latency": 6.4,
-      "p90_latency": 22.51,
-      "p99_latency": 51.72,
-      "avg_tool_calls": 1.92
+      "count": 151,
+      "avg_latency": 5.02,
+      "median_latency": 3.85,
+      "p90_latency": 8.64,
+      "p99_latency": 17.67,
+      "avg_tool_calls": 1.9
     },
     "sonnet": {
-      "count": 1456,
-      "avg_latency": 9.42,
-      "median_latency": 6.38,
-      "p90_latency": 19.54,
-      "p99_latency": 43.55,
-      "avg_tool_calls": 2.21
+      "count": 285,
+      "avg_latency": 13.28,
+      "median_latency": 9.48,
+      "p90_latency": 22.31,
+      "p99_latency": 79.44,
+      "avg_tool_calls": 6.27
     }
   },
   "cost": {
-    "today": 99.922163,
-    "this_week": 536.259913,
-    "last_30d": 680.821603
+    "today": 0.286706,
+    "this_week": 188.847188,
+    "last_30d": 188.847188
   },
-  "total_output_tokens": 1993176,
+  "total_output_tokens": 852361,
   "corrections": {
-    "total": 5,
+    "total": 0,
     "new": 0,
     "pattern": 0,
     "resolved": 0,
-    "categories": {
-      "memory": 1,
-      "judgment": 3
-    },
-    "repeating_patterns": [
-      "judgment"
-    ]
+    "categories": {},
+    "repeating_patterns": []
   },
   "tasks": {
     "red": 1,
-    "yellow": 1,
-    "green": 1,
-    "stuck_3d": 4,
-    "stuck_7d": 1
+    "yellow": 4,
+    "green": 3,
+    "stuck_3d": 5,
+    "stuck_7d": 8
   },
   "busiest_hours_utc": {
-    "10": 259,
-    "9": 175,
-    "15": 169,
-    "17": 163,
-    "21": 146,
-    "8": 143,
-    "7": 140,
-    "20": 136
+    "18": 55,
+    "17": 54,
+    "14": 40,
+    "12": 27,
+    "15": 27,
+    "10": 26,
+    "16": 26,
+    "19": 25
   },
   "activity_by_weekday": {
-    "Wednesday": 376,
-    "Thursday": 377,
-    "Friday": 416,
-    "Saturday": 174,
-    "Sunday": 395,
-    "Monday": 351,
-    "Tuesday": 209
+    "Monday": 10,
+    "Tuesday": 187,
+    "Wednesday": 120,
+    "Thursday": 52,
+    "Friday": 36,
+    "Saturday": 32,
+    "Sunday": 3
   },
   "slowest_responses": [
     {
-      "latency_s": 95.361,
-      "model": "opus",
-      "timestamp": "2026-03-19T14:22:41.484000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3BDF22603E556D9376C3\",\n  \"reply_to_id\": \"3EB0DCB75FB1"
-    },
-    {
-      "latency_s": 86.054,
+      "latency_s": 96.076,
       "model": "sonnet",
-      "timestamp": "2026-03-12T16:05:43.621000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A51761E7A1E5426E0C4\",\n  \"sender_id\": \"+972543333556\""
+      "timestamp": "2026-03-24T14:32:19.775000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"987\",\n  \"sender_id\": \"539224224\",\n  \"sender\": \"Yoni A"
     },
     {
-      "latency_s": 83.438,
+      "latency_s": 89.513,
       "model": "sonnet",
-      "timestamp": "2026-03-12T16:48:40.484000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A51495330983D92BC80\",\n  \"sender_id\": \"16962983402711"
+      "timestamp": "2026-03-24T14:18:41.479000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"973\",\n  \"sender_id\": \"539224224\",\n  \"sender\": \"Yoni A"
     },
     {
-      "latency_s": 79.961,
-      "model": "opus",
-      "timestamp": "2026-03-20T18:37:37.999000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3AA3B95F34E7FDE14E5E\",\n  \"sender_id\": \"+972543333556\""
+      "latency_s": 87.168,
+      "model": "sonnet",
+      "timestamp": "2026-03-24T14:07:18.028000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"961\",\n  \"sender_id\": \"539224224\",\n  \"sender\": \"Yoni A"
     },
     {
-      "latency_s": 77.852,
-      "model": "opus",
-      "timestamp": "2026-03-20T17:04:19.173000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3AB085D95FC0D76F98C8\",\n  \"sender_id\": \"+972543333556\""
+      "latency_s": 77.97,
+      "model": "sonnet",
+      "timestamp": "2026-03-27T09:13:52.657000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A9F81FC24C349068322\",\n  \"sender_id\": \"+972543333556\""
+    },
+    {
+      "latency_s": 69.442,
+      "model": "sonnet",
+      "timestamp": "2026-03-24T07:19:47.393000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A42994A66015FFFB550\",\n  \"sender_id\": \"+972543333556\""
     }
   ]
 }

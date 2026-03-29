@@ -12,7 +12,7 @@
       "modelTier": "tier1",
       "allowedActions": [
         "whatsapp_groups",
-        "message_summarization", 
+        "message_summarization",
         "group_communication",
         "message_send"
       ],
@@ -29,7 +29,7 @@
       "agentId": "masha",
       "name": "מאשה - Legal Agent",
       "domain": "legal",
-      "workspace": "/home/jonia/.openclaw/workspace", 
+      "workspace": "/home/jonia/.openclaw/workspace",
       "agentDir": "agents/masha",
       "script": "agents/masha/masha_agent.py",
       "defaultModel": "anthropic/claude-opus-4-6",
@@ -54,7 +54,7 @@
       "name": "טלי - Marketing Agent",
       "domain": "marketing",
       "workspace": "/home/jonia/.openclaw/workspace",
-      "agentDir": "agents/tali-marketing", 
+      "agentDir": "agents/tali-marketing",
       "script": "agents/tali-marketing/tali_agent.py",
       "defaultModel": "anthropic/claude-sonnet-4-20250514",
       "modelTier": "tier2",
@@ -81,7 +81,7 @@
       "workspace": "/home/jonia/.openclaw/workspace",
       "agentDir": "agents/tzofit-research",
       "script": "agents/tzofit-research/tzofit_agent.py",
-      "defaultModel": "anthropic/claude-sonnet-4-20250514", 
+      "defaultModel": "anthropic/claude-sonnet-4-20250514",
       "modelTier": "tier2",
       "allowedActions": [
         "market_research",
@@ -100,14 +100,14 @@
       }
     },
     "eti": {
-      "agentId": "eti-automation", 
+      "agentId": "eti-automation",
       "name": "אתי - Automation Agent",
       "domain": "automation",
       "workspace": "/home/jonia/.openclaw/workspace",
       "agentDir": "agents/eti-automation",
       "script": "agents/eti-automation/eti_agent.py",
       "defaultModel": "anthropic/claude-sonnet-4-20250514",
-      "modelTier": "tier2", 
+      "modelTier": "tier2",
       "allowedActions": [
         "workflow_automation",
         "system_integration",
@@ -125,7 +125,7 @@
     },
     "dana": {
       "agentId": "dana-fitness",
-      "name": "דנה - Fitness Agent", 
+      "name": "דנה - Fitness Agent",
       "domain": "fitness",
       "workspace": "/home/jonia/.openclaw/workspace",
       "agentDir": "agents/dana-fitness",
@@ -134,7 +134,7 @@
       "modelTier": "tier1",
       "allowedActions": [
         "fitness_tracking",
-        "nutrition_analysis", 
+        "nutrition_analysis",
         "health_monitoring",
         "file_update"
       ],
@@ -145,6 +145,19 @@
         "can_analyze_nutrition": true,
         "can_update_files": true,
         "can_schedule_tasks": false
+      },
+      "preferred_notification_channel": "whatsapp",
+      "notification_rules": {
+        "reminders": "whatsapp_only",
+        "allowed_channels": [
+          "whatsapp"
+        ],
+        "forbidden_channels": [
+          "telegram",
+          "email",
+          "openai_task_email"
+        ],
+        "note": "Per OPS/NOTIFICATION_ROUTING_FIX.md — Dana reminders must route to WhatsApp only"
       }
     }
   },
@@ -153,9 +166,18 @@
     "version": "1.0",
     "total_agents": 6,
     "risk_levels": {
-      "low": ["odya", "tzofit", "dana"],
-      "medium": ["masha", "tali"], 
-      "high": ["eti"]
+      "low": [
+        "odya",
+        "tzofit",
+        "dana"
+      ],
+      "medium": [
+        "masha",
+        "tali"
+      ],
+      "high": [
+        "eti"
+      ]
     }
   }
 }

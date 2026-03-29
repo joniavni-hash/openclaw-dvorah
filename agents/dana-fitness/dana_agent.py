@@ -4,7 +4,17 @@
 
 Additive implementation so it can be reviewed and adopted safely.
 Designed to replace the current placeholder execute path in dana_agent.py.
+
+NOTIFICATION ROUTING (OPS/NOTIFICATION_ROUTING_FIX.md):
+  - All Dana reminders MUST route to WhatsApp only
+  - Forbidden channels: telegram, email, openai_task_email
+  - Never create scheduled email tasks for reminders
 """
+
+# Dana notification routing constants
+DANA_PREFERRED_CHANNEL = "whatsapp"
+DANA_FORBIDDEN_CHANNELS = ["telegram", "email", "openai_task_email"]
+DANA_ALLOWED_CHANNELS = ["whatsapp"]
 
 import re
 import sys
