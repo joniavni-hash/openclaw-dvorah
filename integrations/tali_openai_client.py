@@ -98,11 +98,14 @@ RESPONSE_SCHEMA = {
     },
 }
 
-# Strict json_schema wrapper for OpenAI response_format
-OPENAI_RESPONSE_FORMAT = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "tali_response",
+# Per-task strict json_schema wrappers for OpenAI response_format.
+# The outer envelope (ok, type, data, error) is shared; only `data` differs.
+
+def _make_response_format(name: str, data_properties: dict, data_required: list) -> dict:
+    """Build a strict json_schema response_format for the Responses API text.format field."""
+    return {
+        "type": "json_schema",
+        "name": name,
         "strict": True,
         "schema": {
             "type": "object",
@@ -116,7 +119,9 @@ OPENAI_RESPONSE_FORMAT = {
                 },
                 "data": {
                     "type": "object",
-                    "additionalProperties": True,
+                    "additionalProperties": False,
+                    "properties": data_properties,
+                    "required": data_required,
                 },
                 "error": {
                     "anyOf": [
@@ -134,8 +139,53 @@ OPENAI_RESPONSE_FORMAT = {
                 },
             },
         },
+    }
+
+
+SCHEMA_CAPTION_GEN = _make_response_format(
+    "tali_caption_gen",
+    {
+        "task_type": {"type": "string"},
+        "platform": {"type": "string"},
+        "caption": {"type": "string"},
+        "hashtags": {"type": "array", "items": {"type": "string"}},
+        "angle": {"type": "string"},
+        "notes": {"type": "string"},
     },
+    ["task_type", "platform", "caption", "hashtags", "angle", "notes"],
+)
+
+SCHEMA_HOOK_VARIATION = _make_response_format(
+    "tali_hook_variation",
+    {
+        "task_type": {"type": "string"},
+        "platform": {"type": "string"},
+        "hooks": {"type": "array", "items": {"type": "string"}},
+        "recommended": {"type": "string"},
+        "notes": {"type": "string"},
+    },
+    ["task_type", "platform", "hooks", "recommended", "notes"],
+)
+
+SCHEMA_GENERIC = _make_response_format(
+    "tali_generic",
+    {
+        "task_type": {"type": "string"},
+        "platform": {"type": "string"},
+        "notes": {"type": "string"},
+    },
+    ["task_type", "platform", "notes"],
+)
+
+_TASK_SCHEMA_MAP = {
+    "caption_gen": SCHEMA_CAPTION_GEN,
+    "hook_variation": SCHEMA_HOOK_VARIATION,
 }
+
+
+def _get_schema_for_task(task_type: str) -> dict:
+    """Return the strict response_format schema matching *task_type*."""
+    return _TASK_SCHEMA_MAP.get(task_type, SCHEMA_GENERIC)
 
 # ---------------------------------------------------------------------------
 # Global developer prompt
@@ -416,6 +466,7 @@ class TaliOpenAIClient:
 
     def _real_task(self, task_json: dict, _retry: bool = False) -> dict:
         """Call OpenAI Responses API, handle tool calls, validate."""
+        schema = _get_schema_for_task(task_json.get("task_type", ""))
         body = {
             "model": self.MODEL,
             "instructions": DEVELOPER_PROMPT,
@@ -423,7 +474,7 @@ class TaliOpenAIClient:
                 {"role": "user", "content": json.dumps(task_json)},
             ],
             "tools": TOOL_DEFINITIONS,
-            "text": OPENAI_RESPONSE_FORMAT,
+            "text": {"format": schema},
         }
 
         resp_data = self._api_call(body)
@@ -431,7 +482,7 @@ class TaliOpenAIClient:
             return self._error_envelope("API_FAILURE", "OpenAI API call failed")
 
         # Handle tool-call round-trips
-        resp_data = self._handle_tool_calls(resp_data)
+        resp_data = self._handle_tool_calls(resp_data, schema)
         if resp_data is None:
             return self._error_envelope("TOOL_FAILURE", "Tool execution failed")
 
@@ -470,7 +521,7 @@ class TaliOpenAIClient:
             print(f"[TaliOpenAI] API exception: {exc}")
             return None
 
-    def _handle_tool_calls(self, resp_data: dict) -> dict | None:
+    def _handle_tool_calls(self, resp_data: dict, schema: dict) -> dict | None:
         """Process tool calls iteratively until model returns final output."""
         max_rounds = 5
         for _ in range(max_rounds):
@@ -508,7 +559,7 @@ class TaliOpenAIClient:
                 "instructions": DEVELOPER_PROMPT,
                 "input": tool_results,
                 "tools": TOOL_DEFINITIONS,
-                "text": OPENAI_RESPONSE_FORMAT,
+                "text": {"format": schema},
                 "previous_response_id": response_id,
             }
             resp_data = self._api_call(body)
@@ -593,15 +644,19 @@ def _self_test():
     print(f"Rejected: {not ok} (error: {err}) | Trace 4: {status}")
     results.append(status)
 
-    # Trace 5: missing OPENAI_API_KEY → mock mode, valid output
+    # Trace 5: mock fallback — instantiate client with no key by temporarily overriding OPENAI_API_KEY
     print("\n--- Trace 5: mock mode (no API key) ---")
-    status = "PASS" if client.mock else "FAIL"
-    if client.mock:
-        r = client.run_task({"task_type": "caption_gen"})
-        ok, _ = validate_response(r)
-        if not ok:
-            status = "FAIL"
-    print(f"Mock mode active: {client.mock} | Valid output: {ok if client.mock else 'n/a'} | Trace 5: {status}")
+    saved_key = os.environ.pop("OPENAI_API_KEY", None)
+    try:
+        mock_client = TaliOpenAIClient.__new__(TaliOpenAIClient)
+        mock_client.mock = True
+        mock_r = mock_client._mock_task("caption_gen", {"task_type": "caption_gen", "platform": "instagram"})
+        mock_ok, _ = validate_response(mock_r)
+        status = "PASS" if mock_ok else "FAIL"
+        print(f"Mock mode active: True | Valid output: {mock_ok} | Trace 5: {status}")
+    finally:
+        if saved_key:
+            os.environ["OPENAI_API_KEY"] = saved_key
     results.append(status)
 
     # Summary
