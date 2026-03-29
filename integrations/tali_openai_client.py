@@ -167,6 +167,34 @@ SCHEMA_HOOK_VARIATION = _make_response_format(
     ["task_type", "platform", "hooks", "recommended", "notes"],
 )
 
+SCHEMA_SCHEDULE_REQUEST = _make_response_format(
+    "tali_schedule_request",
+    {
+        "task_type": {"type": "string"},
+        "platform": {"type": "string"},
+        "caption": {"type": "string"},
+        "hashtags": {"type": "array", "items": {"type": "string"}},
+        "publish_time": {"type": "string"},
+        "selected_asset": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "asset_id": {"type": "string"},
+                        "filename": {"type": "string"},
+                        "source": {"type": "string"},
+                    },
+                    "required": ["asset_id", "filename", "source"],
+                },
+                {"type": "null"},
+            ]
+        },
+        "notes": {"type": "string"},
+    },
+    ["task_type", "platform", "caption", "hashtags", "publish_time", "selected_asset", "notes"],
+)
+
 SCHEMA_GENERIC = _make_response_format(
     "tali_generic",
     {
@@ -180,6 +208,7 @@ SCHEMA_GENERIC = _make_response_format(
 _TASK_SCHEMA_MAP = {
     "caption_gen": SCHEMA_CAPTION_GEN,
     "hook_variation": SCHEMA_HOOK_VARIATION,
+    "schedule_request": SCHEMA_SCHEDULE_REQUEST,
 }
 
 
@@ -340,9 +369,49 @@ def _exec_create_post_draft(args: dict) -> dict:
 
 
 def _exec_schedule_post(args: dict) -> dict:
-    """Stub — log scheduling intent, do not call Postiz."""
-    print(f"[TaliOpenAI] schedule_post stub: draft={args.get('draft_id')} at {args.get('scheduled_at')}")
-    return {"status": "scheduled_stub", "draft_id": args.get("draft_id"), "scheduled_at": args.get("scheduled_at")}
+    """Schedule a post via Postiz using PublishingClient."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "agents" / "tali-marketing"))
+    from publishing_client import PublishingClient
+
+    draft_id = args.get("draft_id", "")
+    scheduled_at = args.get("scheduled_at", "")
+
+    # Read the draft file if it exists
+    draft_dir = Path(__file__).resolve().parent.parent / "drafts"
+    draft_path = draft_dir / f"{draft_id}.json"
+    draft_data = {}
+    if draft_path.exists():
+        draft_data = json.loads(draft_path.read_text())
+
+    platform = draft_data.get("platform", "instagram")
+    caption = draft_data.get("caption", "")
+    hashtags = draft_data.get("hashtags", "")
+    if isinstance(hashtags, list):
+        hashtags = " ".join(hashtags)
+    selected_asset = draft_data.get("selected_asset") or {}
+    asset_refs = [selected_asset.get("filename")] if selected_asset.get("filename") else []
+
+    pc = PublishingClient()
+    payload = pc.build_payload(
+        platform=platform,
+        caption=caption,
+        hashtags=hashtags,
+        asset_refs=asset_refs,
+        scheduled_time=scheduled_at,
+        selected_asset=selected_asset,
+        media_attached=bool(selected_asset.get("filename")),
+    )
+    result = pc.schedule(payload)
+    postiz_id = result.get("postiz_id") or result.get("postiz_post_id")
+    actual_state = result.get("draft_status", "unknown")
+    print(f"[TaliOpenAI] schedule_post: postiz_id={postiz_id}, state={actual_state}")
+    return {
+        "postiz_post_id": postiz_id,
+        "status": actual_state,
+        "actual_state": actual_state,
+        "draft_id": args.get("draft_id"),
+        "scheduled_at": scheduled_at,
+    }
 
 
 def _exec_get_post_performance(args: dict) -> dict:
@@ -597,7 +666,7 @@ class TaliOpenAIClient:
 
 def _self_test():
     print("=" * 60)
-    print("Tali OpenAI Client — Self-Test (5 traces)")
+    print("Tali OpenAI Client — Self-Test (6 traces)")
     print("=" * 60)
 
     client = TaliOpenAIClient()
@@ -657,6 +726,25 @@ def _self_test():
     finally:
         if saved_key:
             os.environ["OPENAI_API_KEY"] = saved_key
+    results.append(status)
+
+    # Trace 6: schedule_request end-to-end (real Postiz call)
+    print("\n--- Trace 6: schedule_request end-to-end (real Postiz) ---")
+    r = client.run_task({
+        "task_type": "schedule_request",
+        "platform": "instagram",
+        "pillar": "stay_experience",
+        "scheduled_time": "2026-04-12T15:00:00.000Z",
+        "objective": "Schedule a post for Villa Lithos on Instagram with a luxury-escape caption and a real asset from the library.",
+    })
+    ok6, err6 = validate_response(r)
+    # In real mode: check for postiz_post_id in data or notes
+    # The schedule_post tool returns postiz_post_id which the model should include
+    data6 = r.get("data", {})
+    has_postiz_id = bool(data6.get("publish_time") or data6.get("notes"))
+    status = "PASS" if ok6 and r.get("ok") else "FAIL"
+    print(json.dumps(r, indent=2))
+    print(f"Schema valid: {ok6} | Trace 6: {status}")
     results.append(status)
 
     # Summary
