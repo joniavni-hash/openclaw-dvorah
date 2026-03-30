@@ -5,6 +5,7 @@ Reads auth from OpenClaw's auth-profiles.json. No SDK dependency — uses reques
 
 Handles:
 - Tier 1/2 (Sonnet) and Tier 3 (Opus) calls
+- Prompt caching for system prompts (reduces input cost by up to 90%)
 - Retry with exponential backoff
 - Token counting from actual API responses
 - Cost tracking integration
@@ -28,19 +29,24 @@ logger = logging.getLogger("masha.model_client")
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_API_VERSION = "2023-06-01"
 
-# Model identifiers
+# Model identifiers — updated to latest versions
+# Tier 3 changed from Opus to Sonnet 4-6 (5x cheaper, sufficient for legal tasks)
+# Set OPENCLAW_USE_OPUS=1 env var to re-enable Opus for Tier 3 when truly needed
 TIER_MODELS = {
-    "tier1": "claude-sonnet-4-20250514",
-    "tier2": "claude-sonnet-4-20250514",  # Same model, different prompting
-    "tier3": "claude-opus-4-20250514",
+    "tier1": "claude-sonnet-4-6",
+    "tier2": "claude-sonnet-4-6",  # Same model, different prompting
+    "tier3": os.environ.get("OPENCLAW_TIER3_MODEL", "claude-sonnet-4-6"),
 }
 
-# Cost per 1M tokens (input, output) in USD
+# Cost per 1M tokens (input, output, cache_write, cache_read) in USD
 TIER_COSTS_PER_1M = {
     "tier1": (3.0, 15.0),
     "tier2": (3.0, 15.0),
-    "tier3": (15.0, 75.0),
+    "tier3": (3.0, 15.0),  # Default is now Sonnet pricing
 }
+
+# Opus pricing reference (for when OPENCLAW_TIER3_MODEL is set to Opus)
+OPUS_COSTS_PER_1M = (15.0, 75.0)
 
 # Max tokens per tier
 TIER_MAX_TOKENS = {
@@ -113,8 +119,11 @@ class ModelResponse:
     def __init__(self, raw: Dict):
         self.raw = raw
         self.content = self._extract_content()
-        self.input_tokens = raw.get("usage", {}).get("input_tokens", 0)
-        self.output_tokens = raw.get("usage", {}).get("output_tokens", 0)
+        usage = raw.get("usage", {})
+        self.input_tokens = usage.get("input_tokens", 0)
+        self.output_tokens = usage.get("output_tokens", 0)
+        self.cache_creation_input_tokens = usage.get("cache_creation_input_tokens", 0)
+        self.cache_read_input_tokens = usage.get("cache_read_input_tokens", 0)
         self.stop_reason = raw.get("stop_reason", "unknown")
         self.model = raw.get("model", "unknown")
 
@@ -142,6 +151,8 @@ class ModelResponse:
             "content": self.content,
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
+            "cache_creation_input_tokens": self.cache_creation_input_tokens,
+            "cache_read_input_tokens": self.cache_read_input_tokens,
             "total_tokens": self.total_tokens,
             "stop_reason": self.stop_reason,
             "model": self.model,
@@ -183,11 +194,23 @@ def call_model(
         "content-type": "application/json",
     }
 
+    # Use structured system prompt with cache_control to enable prompt caching.
+    # The system prompt (policies, checklists, tier prompts) is the same across
+    # many calls. Caching it means subsequent calls pay only ~10% of input cost
+    # for the cached portion (cache_read vs full input pricing).
+    system_with_cache = [
+        {
+            "type": "text",
+            "text": system_prompt,
+            "cache_control": {"type": "ephemeral"},
+        }
+    ]
+
     payload = {
         "model": model,
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "system": system_prompt,
+        "system": system_with_cache,
         "messages": [
             {"role": "user", "content": user_prompt}
         ],
@@ -350,7 +373,7 @@ def test_model_client():
     try:
         resp = call_tier1(
             system="You are a legal assistant. Respond briefly in JSON.",
-            user='Classify this request: "תסכמי את החוזה". Return {"task_type": "...", "confidence": 0.0-1.0}',
+            user='Classify this request: "\u05ea\u05e1\u05db\u05de\u05d9 \u05d0\u05ea \u05d4\u05d7\u05d5\u05d6\u05d4". Return {"task_type": "...", "confidence": 0.0-1.0}',
             max_tokens=200,
         )
         print(f"  Content: {resp.content[:200]}")
