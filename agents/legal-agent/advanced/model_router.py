@@ -11,23 +11,25 @@ from enum import Enum
 
 
 class ModelTier(Enum):
-    TIER1_CHEAP = "tier1"      # claude-sonnet-4-20250514
-    TIER2_MID = "tier2"        # claude-sonnet-4-20250514 (enhanced prompting + CoT)
-    TIER3_OPUS = "tier3"       # claude-opus-4-20250514
+    TIER1_CHEAP = "tier1"      # claude-sonnet-4-6
+    TIER2_MID = "tier2"        # claude-sonnet-4-6 (enhanced prompting + CoT)
+    TIER3_PREMIUM = "tier3"    # claude-sonnet-4-6 (default) or Opus via env var
 
 
 # Actual model identifiers for API calls
+# Note: actual model used for Tier 3 is controlled by OPENCLAW_TIER3_MODEL env var
+# in model_client.py. These are for cost estimation only.
 TIER_TO_MODEL = {
-    ModelTier.TIER1_CHEAP: "anthropic/claude-sonnet-4-20250514",
-    ModelTier.TIER2_MID: "anthropic/claude-sonnet-4-20250514",  # Same model, different prompting strategy
-    ModelTier.TIER3_OPUS: "anthropic/claude-opus-4-20250514",
+    ModelTier.TIER1_CHEAP: "anthropic/claude-sonnet-4-6",
+    ModelTier.TIER2_MID: "anthropic/claude-sonnet-4-6",
+    ModelTier.TIER3_PREMIUM: "anthropic/claude-sonnet-4-6",
 }
 
-# Cost per 1M tokens (input, output) in USD
+# Cost per 1M tokens (input, output) in USD — all Sonnet now
 TIER_COSTS = {
     ModelTier.TIER1_CHEAP: (3.0, 15.0),
     ModelTier.TIER2_MID: (3.0, 15.0),
-    ModelTier.TIER3_OPUS: (15.0, 75.0),
+    ModelTier.TIER3_PREMIUM: (3.0, 15.0),
 }
 
 
@@ -280,29 +282,31 @@ class ModelRouter:
         escalation_triggers = []
         reasons = []
 
-        # === TIER 3 (Opus) GATES ===
-        # These conditions ALWAYS trigger Opus
-        opus_required = False
+        # === TIER 3 (Premium) GATES ===
+        # These conditions trigger Tier 3 (Sonnet with enhanced prompting).
+        # Thresholds raised to reduce unnecessary escalation.
+        # Previously Tier 3 was Opus ($15/$75 per 1M), now Sonnet ($3/$15).
+        premium_required = False
 
-        if risk_level == "critical":
-            opus_required = True
-            reasons.append(f"Critical risk detected: {', '.join(risk_factors[:3])}")
+        if risk_level == "critical" and complexity_score >= 60:
+            premium_required = True
+            reasons.append(f"Critical risk + high complexity ({complexity_score}): {', '.join(risk_factors[:3])}")
 
-        if complexity_score >= 75:
-            opus_required = True
-            reasons.append(f"High complexity score: {complexity_score}")
+        if complexity_score >= 85:
+            premium_required = True
+            reasons.append(f"Very high complexity score: {complexity_score}")
 
-        if doc_length > self.VERY_LONG_DOC and task_type in ("contract_review", "risk_analysis"):
-            opus_required = True
-            reasons.append(f"Very long document ({doc_length} words) with complex analysis needed")
+        if doc_length > self.VERY_LONG_DOC and task_type in ("contract_review", "risk_analysis") and risk_level in ("high", "critical"):
+            premium_required = True
+            reasons.append(f"Very long document ({doc_length} words) with high-risk complex analysis")
 
-        if task_type == "draft_response" and risk_level in ("high", "critical"):
-            opus_required = True
-            reasons.append("Sensitive drafting with high risk")
+        if task_type == "draft_response" and risk_level == "critical":
+            premium_required = True
+            reasons.append("Sensitive drafting with critical risk")
 
-        if opus_required:
+        if premium_required:
             return (
-                ModelTier.TIER3_OPUS,
+                ModelTier.TIER3_PREMIUM,
                 "; ".join(reasons),
                 0.95,
                 [],
@@ -311,7 +315,7 @@ class ModelRouter:
         # === TIER 2 (Mid) CONDITIONS ===
         tier2_needed = False
 
-        if complexity_score >= 45:
+        if complexity_score >= 55:
             tier2_needed = True
             reasons.append(f"Moderate complexity: {complexity_score}")
 
@@ -377,7 +381,7 @@ class ModelRouter:
         """Parse a forced tier string."""
         force_lower = force_tier.lower()
         if "opus" in force_lower or "3" in force_lower or "premium" in force_lower:
-            return ModelTier.TIER3_OPUS
+            return ModelTier.TIER3_PREMIUM
         elif "mid" in force_lower or "2" in force_lower:
             return ModelTier.TIER2_MID
         return ModelTier.TIER1_CHEAP
@@ -447,11 +451,11 @@ class ModelRouter:
         ambiguity = tier1_output.get("ambiguity_detected", False)
         risk_escalation = tier1_output.get("risk_escalation", False)
 
-        if risk_escalation:
-            return True, ModelTier.TIER3_OPUS, "Risk escalation flagged by lower tier"
+        if risk_escalation and confidence < 0.4:
+            return True, ModelTier.TIER3_PREMIUM, "Risk escalation flagged by lower tier with low confidence"
 
-        if confidence < 0.5:
-            return True, ModelTier.TIER3_OPUS, f"Low confidence ({confidence}) from lower tier"
+        if confidence < 0.3:
+            return True, ModelTier.TIER3_PREMIUM, f"Very low confidence ({confidence}) from lower tier"
 
         if confidence < 0.7 and len(flagged) >= 2:
             return True, ModelTier.TIER2_MID, f"Moderate confidence with {len(flagged)} flagged issues"
