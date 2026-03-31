@@ -1,0 +1,132 @@
+{
+  "status": "ok",
+  "summary": {
+    "total_requests": 93,
+    "errors": 3,
+    "warnings": 0,
+    "qa_failures": 1,
+    "invariant_violations": 2,
+    "slow_requests": 0,
+    "error_rate": 0.0323,
+    "qa_fail_rate": 0.0108,
+    "avg_duration_ms": 4.8
+  },
+  "domain_distribution": {
+    "unknown": 61,
+    "fitness": 7,
+    "cost_usage": 6,
+    "whatsapp_group": 4,
+    "general": 4,
+    "research": 3,
+    "marketing": 3,
+    "legal": 2,
+    "automation": 2,
+    "group_retrieval": 1
+  },
+  "agent_distribution": {
+    "odya": 24,
+    "dana": 21,
+    "direct": 20,
+    "masha": 14,
+    "tzofit": 5,
+    "cost_reporter": 4,
+    "tali": 3,
+    "eti": 2
+  },
+  "agent_health": {
+    "odya": {
+      "total": 24,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "dana": {
+      "total": 21,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "direct": {
+      "total": 20,
+      "errors": 1,
+      "health": "degraded"
+    },
+    "tzofit": {
+      "total": 5,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "masha": {
+      "total": 14,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "eti": {
+      "total": 2,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "tali": {
+      "total": 3,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "cost_reporter": {
+      "total": 4,
+      "errors": 2,
+      "health": "failing"
+    }
+  },
+  "errors": [
+    {
+      "execution_id": "exec_20260328_105328_128424371227312",
+      "status": "error",
+      "domain": "unknown",
+      "agent": "direct",
+      "message": "אכלתי פיצה",
+      "error": "Simulated agent failure"
+    },
+    {
+      "execution_id": "exec_20260328_211643_128063600489312",
+      "status": "invariant_violation",
+      "domain": "cost_usage",
+      "agent": "cost_reporter",
+      "message": "כמה בזבזת היום",
+      "error": ""
+    },
+    {
+      "execution_id": "exec_20260328_211648_135945233150816",
+      "status": "invariant_violation",
+      "domain": "cost_usage",
+      "agent": "cost_reporter",
+      "message": "כמה בזבזת היום",
+      "error": ""
+    }
+  ],
+  "warnings": [],
+  "qa_failures": [
+    {
+      "execution_id": "exec_20260326_152930_127759436403440",
+      "domain": "unknown",
+      "agent": "direct",
+      "message": "שלום מה שלומך"
+    }
+  ],
+  "invariant_violations": [
+    {
+      "execution_id": "exec_20260328_211643_128063600489312",
+      "status": "invariant_violation",
+      "domain": "cost_usage",
+      "agent": "cost_reporter",
+      "message": "כמה בזבזת היום",
+      "error": ""
+    },
+    {
+      "execution_id": "exec_20260328_211648_135945233150816",
+      "status": "invariant_violation",
+      "domain": "cost_usage",
+      "agent": "cost_reporter",
+      "message": "כמה בזבזת היום",
+      "error": ""
+    }
+  ],
+  "slow_requests": []
+}
