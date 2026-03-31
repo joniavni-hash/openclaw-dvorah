@@ -13,7 +13,6 @@
 | שעה | משימה |
 |-----|--------|
 | 07:00-09:00 | `python3 scripts/health_check.py` — כשלון בלבד → דווחי |
-| 08:00-10:00 | `python3 core/research_scheduler.py run-scheduled` — 3+ משימות → תמצית |
 | 09:00-11:00 | Villa: תעדי ב-villa-lithos/analytics/weekly_operating_log.md |
 | 12:00-14:00 | בדקי OPEN_TASKS.md — 🔴 3+ ימים / 🟡 7+ ימים / deadline עבר → תזכורת |
 | 18:00-20:00 | `python3 scripts/group_messages.py "120363418497534459" --days 1` → אודיה מסכמת → שלחי ל-120363425514726135@g.us |
@@ -23,7 +22,6 @@
 
 ## ראשון בלבד
 - 07:30-09:00: "בוקר טוב! יום שקילה — תעלה על המשקל ותשלח לי."
-- 09:00-11:00: `python3 core/research_scheduler.py message-briefing 168` → briefing
 - 09:00+: `python3 scripts/metrics.py` → סיכום
 - 19:30+: סיכום דיאטה שבועי
 
