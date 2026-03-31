@@ -119,6 +119,23 @@ class Router:
     # PR1 rule: Opus (tier3) is NEVER selected here.
     # Legal uses tier2 by default.  Escalation to tier3 must go through
     # agent_executor with an explicit justification.
+    # ── Domain context files ─────────────────────────────────────────────
+    # Maps each domain to state files that provide dynamic per-request context.
+    # These are loaded AFTER the static essentials (IDENTITY, SOUL, USER) and
+    # appear later in the prompt — so the static prefix stays cached.
+    DOMAIN_CONTEXT_FILES: Dict[str, List[str]] = {
+        "whatsapp_group":  ["state/KNOWN_GROUPS.md", "state/GROUP_MEMBERS.md", "state/GROUP_MEMORY.md"],
+        "group_retrieval": ["state/KNOWN_GROUPS.md", "state/GROUP_MEMBERS.md", "state/GROUP_MEMORY.md"],
+        "fitness":         ["state/fitness_tracker.md"],
+        "legal":           ["state/OPEN_TASKS.md"],
+        "marketing":       ["state/OPEN_TASKS.md", "state/VILLA_LITHOS_PROFILE.md"],
+        "research":        ["state/OPEN_TASKS.md"],
+        "automation":      ["state/OPEN_TASKS.md", "state/eti_alerts.md"],
+        "scheduling":      ["state/OPEN_TASKS.md"],
+        "general":         ["state/OPEN_TASKS.md"],
+        "cost_usage":      [],
+    }
+
     DOMAIN_TIERS: Dict[str, str] = {
         "legal":            "tier2",   # PR1: was tier3 — downgraded
         "whatsapp_group":   "tier1",   # always cheap
@@ -194,7 +211,7 @@ class Router:
             if content and not content.startswith("[ERROR"):
                 context["files_loaded"].append(f)
 
-        for f in self.registry.get_required_files(domain):
+        for f in self.DOMAIN_CONTEXT_FILES.get(domain, []):
             content = safe_read_file(f, max_lines=100)
             if content and not content.startswith("[ERROR"):
                 context["files_loaded"].append(f)

@@ -3,9 +3,7 @@
  * Intercepts outbound email tool calls and requires Yoni's approval before sending.
  */
 
-const { definePluginEntry } = await import(
-  "/home/jonia/.npm-global/lib/node_modules/openclaw/dist/plugin-sdk/index.js"
-);
+import { definePluginEntry } from "/home/jonia/.npm-global/lib/node_modules/openclaw/dist/plugin-sdk/plugin-entry.js";
 
 export default definePluginEntry({
   id: "email-approval",
@@ -37,7 +35,7 @@ export default definePluginEntry({
           title: `שליחת מייל — אישור נדרש`,
           description: `**אל:** ${to}\n**נושא:** ${subject}\n\n**תצוגה מקדימה:**\n${preview}${body.length > 300 ? "…" : ""}`,
           severity: "warning",
-          timeoutMs: 120_000,
+          timeoutMs: 120000,
           timeoutBehavior: "deny",
         },
       };

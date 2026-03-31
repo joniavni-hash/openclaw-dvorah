@@ -137,7 +137,24 @@ class AgentExecutor:
                     "group_id": group_id, "role": role},
             }
         
-        # Active / responder / representative → needs Dvorah to spawn prompt
+        # Active / responder / representative → assemble real prompt with context
+        assembled_prompt = None
+        context_files_read = []
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "scripts"))
+            from group_agent_context import assemble_prompt
+            recent_msgs = metadata.get("recent_messages")
+            assembled_prompt = assemble_prompt(group_id, message, recent_msgs)
+            context_files_read = [
+                "state/KNOWN_GROUPS.md",
+                "state/GROUP_MEMBERS.md",
+                "state/GROUP_MEMORY.md",
+                "agents/group_agent_prompt.md",
+            ]
+        except Exception:
+            pass  # Graceful degradation: pipeline works without assembled prompt
+
         return {
             "status": "analysis_ready",
             "agent": "אודיה",
@@ -156,6 +173,12 @@ class AgentExecutor:
                 "action": "spawn_odya_prompt",
                 "prepare_cmd": f'python3 agents/whatsapp_group_agent.py --prepare --group-id "{group_id}"',
             },
+            "context_payload": {
+                "assembled_prompt": assembled_prompt,
+                "prompt_template": "agents/group_agent_prompt.md",
+                "context_files_read": context_files_read,
+                "group_id": group_id,
+            } if assembled_prompt else None,
             "metadata": {
                 "model_tier": routing_result.get("model", "tier1"),
                 "group_id": group_id,

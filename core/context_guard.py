@@ -116,6 +116,38 @@ class ContextGuard:
         self.current_usage = 0
         self.loaded_files.clear()
 
+    def build_ordered_prompt(self, static_files: list, dynamic_content: str,
+                              max_dynamic_chars: int = 40000) -> dict:
+        """
+        Arrange prompt for cache efficiency:
+          1. Static prefix (IDENTITY, SOUL, USER, agent system prompt) → cached
+          2. Dynamic suffix (state files, assembled context, message) → unique
+
+        Returns dict with static_prefix, dynamic_suffix, total_chars, cache_boundary.
+        The cache_boundary value tells the session spawner where to place the
+        cache_control breakpoint in the API call.
+        """
+        static_parts = []
+        for f in static_files:
+            content = self.safe_load(f)
+            if content and not content.startswith("[ERROR"):
+                static_parts.append(content)
+
+        static_prefix = "\n\n---\n\n".join(static_parts)
+
+        # Truncate dynamic content if too large
+        if len(dynamic_content) > max_dynamic_chars:
+            dynamic_content = dynamic_content[:max_dynamic_chars] + "\n[TRUNCATED]"
+
+        return {
+            "static_prefix": static_prefix,
+            "dynamic_suffix": dynamic_content,
+            "total_chars": len(static_prefix) + len(dynamic_content),
+            "cache_boundary": len(static_prefix),
+            "static_files": static_files,
+        }
+
+
 # Global instance
 guard = ContextGuard()
 
@@ -130,3 +162,8 @@ def context_status() -> Dict:
 def emergency_compact() -> str:
     """Global function for emergency compaction"""
     return guard.compact_context()
+
+def build_ordered_prompt(static_files: list, dynamic_content: str,
+                         max_dynamic_chars: int = 40000) -> dict:
+    """Global function for cache-boundary-aware prompt construction"""
+    return guard.build_ordered_prompt(static_files, dynamic_content, max_dynamic_chars)

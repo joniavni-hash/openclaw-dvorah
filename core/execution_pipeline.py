@@ -189,6 +189,8 @@ class ExecutionPipeline:
                 "qa_passed": qa_result["passed"],
                 "action_executed": execution_result.get("status", "unknown"),
                 "response_sent": response_result.get("status", "unknown"),
+                "context_payload_present": bool(result.get("context_payload")),
+                "dynamic_context_files": (result.get("context_payload") or {}).get("context_files_read", []),
                 "duration_ms": int((datetime.now() - start_time).total_seconds() * 1000)
             }
             

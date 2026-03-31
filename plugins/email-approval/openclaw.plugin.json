@@ -1,0 +1,13 @@
+{
+  "id": "email-approval",
+  "name": "Email Approval Gate",
+  "version": "1.0.0",
+  "description": "Requires explicit approval before sending any outbound email.",
+  "entry": "index.js",
+  "hooks": ["before_tool_call"],
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
