@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-03-29T06:57:29.573041+00:00",
+  "generated_at": "2026-03-30T05:14:33.954883+00:00",
   "period_days": 30,
-  "total_sessions": 22,
-  "total_response_pairs": 445,
+  "total_sessions": 23,
+  "total_response_pairs": 518,
   "model_stats": {
     "claude-3-5-haiku-20241022": {
       "count": 1,
@@ -29,20 +29,20 @@
       "avg_tool_calls": 1.9
     },
     "sonnet": {
-      "count": 290,
-      "avg_latency": 13.19,
-      "median_latency": 9.36,
-      "p90_latency": 22.3,
-      "p99_latency": 78.98,
-      "avg_tool_calls": 6.36
+      "count": 363,
+      "avg_latency": 12.5,
+      "median_latency": 9.08,
+      "p90_latency": 21.62,
+      "p99_latency": 72.68,
+      "avg_tool_calls": 5.85
     }
   },
   "cost": {
-    "today": 1.737691,
-    "this_week": 190.298173,
-    "last_30d": 190.298173
+    "today": 1.275459,
+    "this_week": 1.275459,
+    "last_30d": 228.194071
   },
-  "total_output_tokens": 867092,
+  "total_output_tokens": 959493,
   "corrections": {
     "total": 0,
     "new": 0,
@@ -55,27 +55,27 @@
     "red": 1,
     "yellow": 4,
     "green": 3,
-    "stuck_3d": 5,
-    "stuck_7d": 8
+    "stuck_3d": 2,
+    "stuck_7d": 11
   },
   "busiest_hours_utc": {
+    "17": 56,
     "18": 55,
-    "17": 54,
-    "14": 40,
-    "12": 27,
-    "15": 27,
-    "10": 26,
-    "16": 26,
-    "6": 25
+    "14": 49,
+    "12": 45,
+    "11": 39,
+    "16": 31,
+    "5": 29,
+    "15": 29
   },
   "activity_by_weekday": {
-    "Monday": 10,
+    "Monday": 20,
     "Tuesday": 187,
     "Wednesday": 120,
     "Thursday": 52,
     "Friday": 36,
     "Saturday": 32,
-    "Sunday": 8
+    "Sunday": 71
   },
   "slowest_responses": [
     {

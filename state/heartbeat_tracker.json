@@ -1,15 +1,15 @@
 {
   "last_run": {
-    "daily_digest": "2026-03-22",
-    "group_summary": "2026-03-22",
+    "daily_digest": "2026-03-30",
+    "group_summary": "2026-03-30",
     "email_followup": null,
-    "health_check": "2026-03-22",
-    "daily_memory": "2026-03-22",
+    "health_check": "2026-03-30",
+    "daily_memory": "2026-03-31",
     "weekly_metrics": "2026-03-22",
     "weekly_corrections": "2026-03-22",
     "weekly_recursive_summary": "2026-03-22",
-    "x_twitter_digest": null,
-    "fitness_weigh_in": null,
+    "x_twitter_digest": "2026-03-31",
+    "fitness_weigh_in": "2026-03-30",
     "fitness_weekly_summary": null,
     "google_ads_check": null
   },
