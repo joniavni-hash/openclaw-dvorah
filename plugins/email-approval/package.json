@@ -1,0 +1,7 @@
+{
+  "name": "email-approval",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Requires approval before sending outbound emails",
+  "main": "index.js"
+}
