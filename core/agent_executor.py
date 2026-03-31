@@ -2,9 +2,8 @@
 """
 Agent Executor - Routes to domain agents and returns structured results.
 
-Returns structured responses per agent so QA pipeline can process them.
-Actual model calls and cost logging happen in Dvorah sessions, not here.
-Real agent dispatch will be implemented in PR2.
+PR2: All agents are now wired up to their real execute() methods.
+Each agent returns FinalPayload which is normalized to pipeline dict format.
 """
 
 import json
@@ -188,30 +187,66 @@ class AgentExecutor:
         }
 
     def _handle_masha(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Legal agent."""
-        return {
-            "status": "draft_ready",
-            "agent": "מאשה",
-            "domain": "legal",
-            "response_type": "legal_analysis",
-            "requires_approval": True,
-            "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
-            "summary": "Legal analysis queued for review",
-            "draft_actions": {
-                "approval_reason": "Legal content requires manual review before sending",
-                "action": "legal_review",
-            },
-            "metadata": _meta(routing_result.get("model", "tier2"), "legal_analysis"),
-        }
+        """Legal agent — delegates to MashaAgent.execute()."""
+        tier = routing_result.get("model", "tier2")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "masha"))
+            from masha_agent import MashaAgent
+            agent = MashaAgent()
+            payload = agent.execute(message, {**metadata})
+            pd = payload.to_dict()
+            return {
+                "status": pd.get("status", "needs_approval"),
+                "agent": "מאשה",
+                "domain": "legal",
+                "response_type": "legal_analysis",
+                "requires_approval": pd.get("requires_approval", True),
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
+                "summary": pd.get("final_text", ""),
+                "draft_actions": {
+                    "approval_reason": "Legal content requires manual review before sending",
+                    "action": "legal_review",
+                },
+                "metadata": {**_meta(tier, "legal_analysis"),
+                             **pd.get("metadata", {})},
+            }
+        except Exception as e:
+            return {
+                "status": "draft_ready",
+                "agent": "מאשה",
+                "domain": "legal",
+                "response_type": "legal_analysis",
+                "requires_approval": True,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
+                "summary": "Legal analysis queued for review",
+                "draft_actions": {
+                    "approval_reason": "Legal content requires manual review before sending",
+                    "action": "legal_review",
+                },
+                "metadata": {**_meta(tier, "legal_analysis"), "error": str(e)},
+            }
 
     def _handle_dana(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Fitness agent — execute meal/weight logging directly."""
-        # Dana actually writes to fitness log — delegate to her module
+        """Fitness agent — delegates to DanaAgent.execute()."""
+        tier = routing_result.get("model", "tier1")
         try:
-            import sys
-            sys.path.insert(0, str(self.workspace / "agents" / "dana"))
-            from dana_agent import process_fitness_message
-            result = process_fitness_message(message)
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "dana-fitness"))
+            from dana_agent import DanaAgent
+            agent = DanaAgent()
+            ctx = {**metadata, "model_decision": routing_result.get("model_decision", {})}
+            payload = agent.execute(message, ctx)
+            pd = payload.to_dict()
+            # Execute write actions (append to fitness tracker)
+            for wa in pd.get("write_actions", []):
+                if wa.get("type") == "append_file":
+                    fpath = self.workspace / wa["path"]
+                    try:
+                        with open(fpath, "a", encoding="utf-8") as f:
+                            f.write(wa["content"])
+                    except Exception:
+                        pass
             return {
                 "status": "executed",
                 "agent": "דנה",
@@ -219,14 +254,13 @@ class AgentExecutor:
                 "response_type": "fitness_tracking",
                 "requires_approval": False,
                 "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
-                "summary": result.get("summary", "Fitness data logged"),
+                "summary": pd.get("final_text", "Fitness data logged"),
                 "data_logged": True,
-                "action_taken": result.get("action", "log_entry"),
-                "file_updated": result.get("file_updated"),
-                "metadata": _meta(routing_result.get("model", "tier1"), "nutrition_tracking"),
+                "action_taken": pd.get("metadata", {}).get("task_type", "log_entry"),
+                "metadata": {**_meta(tier, "nutrition_tracking"),
+                             **pd.get("metadata", {})},
             }
         except Exception as e:
-            tier = routing_result.get("model", "tier1")
             m = _meta(tier, "nutrition_tracking")
             m["error"] = str(e)
             return {
@@ -243,21 +277,42 @@ class AgentExecutor:
             }
 
     def _handle_tzofit(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Research agent."""
-        return {
-            "status": "research_ready",
-            "agent": "צופית",
-            "domain": "research",
-            "response_type": "research_analysis",
-            "requires_approval": False,
-            "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
-            "summary": "Research query queued for processing",
-            "analysis": {
-                "query": message[:100],
-                "action": "conduct_research",
-            },
-            "metadata": _meta(routing_result.get("model", "tier2"), "information_gathering"),
-        }
+        """Research agent — delegates to TzofitAgent.execute()."""
+        tier = routing_result.get("model", "tier2")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "tzofit-research"))
+            from tzofit_agent import TzofitAgent
+            agent = TzofitAgent()
+            payload = agent.execute(message, {**metadata})
+            pd = payload.to_dict()
+            return {
+                "status": pd.get("status", "ok"),
+                "agent": "צופית",
+                "domain": "research",
+                "response_type": "research_analysis",
+                "requires_approval": pd.get("requires_approval", False),
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
+                "summary": pd.get("final_text", ""),
+                "analysis": {
+                    "query": message[:100],
+                    "action": "conduct_research",
+                },
+                "metadata": {**_meta(tier, "information_gathering"),
+                             **pd.get("metadata", {})},
+            }
+        except Exception as e:
+            return {
+                "status": "research_ready",
+                "agent": "צופית",
+                "domain": "research",
+                "response_type": "research_analysis",
+                "requires_approval": False,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
+                "summary": "Research query queued for processing",
+                "analysis": {"query": message[:100], "action": "conduct_research"},
+                "metadata": {**_meta(tier, "information_gathering"), "error": str(e)},
+            }
 
     def _handle_tali(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
         """Marketing agent — delegates to TaliAgent.execute()."""
@@ -293,20 +348,39 @@ class AgentExecutor:
             }
 
     def _handle_eti(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Automation agent."""
-        return {
-            "status": "routed",
-            "agent": "עתי",
-            "domain": "automation",
-            "response_type": "automation_task",
-            "requires_approval": False,
-            "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
-            "summary": "Automation task queued",
-            "analysis": {
-                "action": "system_check",
-            },
-            "metadata": _meta(routing_result.get("model", "tier1"), "system_automation"),
-        }
+        """Automation agent — delegates to EtiAgent.execute()."""
+        tier = routing_result.get("model", "tier1")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "eti-automation"))
+            from eti_agent import EtiAgent
+            agent = EtiAgent()
+            payload = agent.execute(message, {**metadata})
+            pd = payload.to_dict()
+            return {
+                "status": pd.get("status", "ok"),
+                "agent": "אתי",
+                "domain": "automation",
+                "response_type": "automation_task",
+                "requires_approval": pd.get("requires_approval", False),
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
+                "summary": pd.get("final_text", ""),
+                "analysis": {"action": "system_check"},
+                "metadata": {**_meta(tier, "system_automation"),
+                             **pd.get("metadata", {})},
+            }
+        except Exception as e:
+            return {
+                "status": "routed",
+                "agent": "אתי",
+                "domain": "automation",
+                "response_type": "automation_task",
+                "requires_approval": False,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
+                "summary": "Automation task queued",
+                "analysis": {"action": "system_check"},
+                "metadata": {**_meta(tier, "system_automation"), "error": str(e)},
+            }
 
 
     def _handle_cost_usage(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
