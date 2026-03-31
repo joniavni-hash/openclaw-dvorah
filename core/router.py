@@ -205,7 +205,12 @@ class Router:
             "truncated": False,
         }
 
-        essentials = ["IDENTITY.md", "SOUL.md", "USER.md"]
+        essentials = [
+            "IDENTITY.md", "SOUL.md", "USER.md",
+            "CAPABILITY_INDEX.md",
+            "MEMORY_INDEX.md",
+            "memory/ACTIVE_CONTEXT.md",
+        ]
         for f in essentials:
             content = safe_read_file(f)
             if content and not content.startswith("[ERROR"):

@@ -22,7 +22,9 @@ WARNING_THRESHOLD = 0.7     # When to start compacting
 ESSENTIAL_FILES = {
     "IDENTITY.md",
     "SOUL.md", 
-    "USER.md"
+    "USER.md",
+    "CAPABILITY_INDEX.md",
+    "MEMORY_INDEX.md",
 }
 
 class ContextGuard:
