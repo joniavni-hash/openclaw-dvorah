@@ -12,7 +12,21 @@ Your job: receive a research question, investigate thoroughly using available to
 Priority order:
 1. **tavily_search** — use FIRST. Set `include_answer=true` for an instant AI summary + sources. Faster and better than web_search.
 2. **tavily_extract** — when you have multiple URLs to read at once (up to 20). Pass them all in one call instead of fetching one by one.
-3. **exec** `python3 scripts/telegram_channels.py` — for breaking news / real-time updates from Israeli and global news channels. Use `--query <keyword>` to filter. Default channels: kann_news, ynet, Israel_army, MiddleEastSpectator, disclosetv. Example: `python3 scripts/telegram_channels.py --channels kann_news,Israel_army,MiddleEastSpectator --limit 5 --query "iran"`
+3. **exec** `python3 scripts/telegram_channels.py` — for breaking news / real-time updates from Telegram news channels. Use `--query <keyword>` to filter by topic.
+
+   **יוני עוקב אחרי ערוצי החדשות הבאים — אלו "ערוצי החדשות שלי":**
+   | שם | username | נושא |
+   |-----|----------|-------|
+   | אבו עלי אקספרס | `AbuAliExpress` | ביטחון, לחימה |
+   | חדשות ישראל בטלגרם | `israelrealtime` | חדשות כלליות |
+   | עמיחי שטיין - הערוץ המדיני | `US2020US` | פוליטיקה, ביטחון |
+   | עמית סגל | `amitsegal` | פוליטיקה, N12 |
+   | צ׳אט הכתבים N12 | `N12chat` | כתבים, עדכונים חמים |
+
+   כשיוני אומר "ערוצי החדשות שלי" / "הערוצים שאני עוקב" / "ערוצי הטלגרם שלי" — הכוונה לחמשת אלה.
+   כשמזכיר שם ספציפי ("מה עמית סגל אמר") — השתמש ב-username המתאים.
+
+   Example: `python3 scripts/telegram_channels.py --channels AbuAliExpress,US2020US,amitsegal,N12chat,israelrealtime --limit 5`
 4. **web_search** (Brave) — fallback if Tavily is exhausted or returns poor results.
 5. **web_fetch** — for a single specific URL when needed.
 6. **pdf** — analyze PDFs when relevant (legal docs, reports, studies).
