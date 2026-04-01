@@ -1,61 +1,61 @@
 {
   "status": "ok",
   "summary": {
-    "total_requests": 27,
+    "total_requests": 37,
     "errors": 0,
     "warnings": 0,
-    "qa_failures": 4,
+    "qa_failures": 7,
     "invariant_violations": 0,
     "slow_requests": 0,
     "error_rate": 0.0,
-    "qa_fail_rate": 0.1481,
-    "avg_duration_ms": 565.0
+    "qa_fail_rate": 0.1892,
+    "avg_duration_ms": 491.9
   },
   "domain_distribution": {
-    "cto": 10,
-    "legal": 5,
-    "scheduling": 3,
-    "automation": 3,
-    "fitness": 3,
-    "general": 2,
-    "research": 1
+    "cto": 14,
+    "legal": 6,
+    "scheduling": 4,
+    "automation": 4,
+    "fitness": 4,
+    "general": 3,
+    "research": 2
   },
   "agent_distribution": {
-    "gabi": 10,
-    "eti": 6,
-    "masha": 5,
-    "dana": 3,
-    "direct": 2,
-    "tzofit": 1
+    "gabi": 14,
+    "eti": 8,
+    "masha": 6,
+    "dana": 4,
+    "direct": 3,
+    "tzofit": 2
   },
   "agent_health": {
     "gabi": {
-      "total": 10,
+      "total": 14,
       "errors": 0,
       "health": "healthy"
     },
     "masha": {
-      "total": 5,
-      "errors": 0,
-      "health": "healthy"
-    },
-    "eti": {
       "total": 6,
       "errors": 0,
       "health": "healthy"
     },
+    "eti": {
+      "total": 8,
+      "errors": 0,
+      "health": "healthy"
+    },
     "dana": {
-      "total": 3,
+      "total": 4,
       "errors": 0,
       "health": "healthy"
     },
     "direct": {
-      "total": 2,
+      "total": 3,
       "errors": 0,
       "health": "healthy"
     },
     "tzofit": {
-      "total": 1,
+      "total": 2,
       "errors": 0,
       "health": "healthy"
     }
@@ -86,6 +86,24 @@
       "domain": "cto",
       "agent": "gabi",
       "message": "עדכני openclaw"
+    },
+    {
+      "execution_id": "exec_20260401_131725_123370277190128",
+      "domain": "cto",
+      "agent": "gabi",
+      "message": "שיפור מתיקונים"
+    },
+    {
+      "execution_id": "exec_20260401_131730_123370273724272",
+      "domain": "general",
+      "agent": "direct",
+      "message": "מה נשמע?"
+    },
+    {
+      "execution_id": "exec_20260401_131730_123370273871856",
+      "domain": "scheduling",
+      "agent": "eti",
+      "message": "מתי הפגישה?"
     }
   ],
   "invariant_violations": [],

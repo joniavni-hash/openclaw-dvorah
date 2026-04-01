@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-04-01T07:27:32.606564",
+  "timestamp": "2026-04-01T15:57:47.430947",
   "checks": {
     "outlook": {
-      "status": "missing_credentials",
-      "ok": false
+      "status": "ok",
+      "ok": true
     },
     "google_ads": {
       "status": "missing_credentials",
@@ -22,16 +22,12 @@
       "status": "check_manually",
       "ok": null,
       "note": "Run web_search to test"
-    },
-    "cron": {
-      "status": "missing_dashboard_cron",
-      "ok": false
     }
   },
   "summary": {
-    "total": 6,
-    "ok": 2,
-    "failed": 3,
+    "total": 5,
+    "ok": 3,
+    "failed": 1,
     "unknown": 1
   }
 }

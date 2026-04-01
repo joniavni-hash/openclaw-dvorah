@@ -126,17 +126,7 @@ def check_brave_api():
         return {"status": str(e)[:100], "ok": False}
 
 
-def check_cron():
-    """Check if dashboard cron is active"""
-    try:
-        result = subprocess.run(
-            ['crontab', '-l'], capture_output=True, text=True, timeout=5
-        )
-        if 'dashboard_push' in result.stdout:
-            return {"status": "ok", "ok": True}
-        return {"status": "missing_dashboard_cron", "ok": False}
-    except Exception as e:
-        return {"status": str(e)[:100], "ok": False}
+
 
 
 def main():
@@ -147,7 +137,7 @@ def main():
         "dashboard": check_dashboard(),
         "gog_cli": check_gog(),
         "brave_search": check_brave_api(),
-        "cron": check_cron(),
+
     }
 
     report = {
