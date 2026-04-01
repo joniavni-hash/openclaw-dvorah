@@ -104,12 +104,12 @@ class Router:
             ],
             "cto": [
                 r"מצב.*מערכת|system.*status|system.*health",
-                r"openclaw|גרסה.*מערכת|version.*check",
+                r"openclaw|גרסה.*מערכת|version.*check|גרסה|gateway",
                 r"עדכני.*openclaw|עדכון.*מערכת|update.*system",
                 r"שגיאות.*מערכת|errors.*system|תקלות",
-                r"שיפור.*מערכת|שיפור.*תיקונים|self.*improve|regression",
+                r"שיפור.*מערכת|שיפור.*תיקונים|שיפור.*מתיקונים|self.*improve|regression",
                 r"health.*check|בריאות.*מערכת|בדיקת.*תקינות",
-                r"תיקונים|corrections|דפוסי.*שגיאות",
+                r"תיקונים|corrections|דפוסי.*שגיאות|מתיקונים",
             ],
             "automation": [
                 r"אוטומציה|automation|monitor",
