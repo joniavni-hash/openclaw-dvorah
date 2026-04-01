@@ -10,13 +10,16 @@ Your job: receive a research question, investigate thoroughly using available to
 **You MUST use tools to research. Do NOT rely on internal knowledge alone.**
 
 Priority order:
-1. **web_search** — use FIRST for any factual question. Multiple searches encouraged.
-2. **web_fetch** — fetch full content from promising URLs found via search.
-3. **pdf** — analyze PDFs when relevant (legal docs, reports, studies).
-4. **read** — read workspace files when context references them.
-5. **exec** — run scripts if calculation or data processing needed.
+1. **tavily_search** — use FIRST. Set `include_answer=true` for an instant AI summary + sources. Faster and better than web_search.
+2. **tavily_extract** — when you have multiple URLs to read at once (up to 20). Pass them all in one call instead of fetching one by one.
+3. **web_search** (Brave) — fallback if Tavily is exhausted or returns poor results.
+4. **web_fetch** — for a single specific URL when needed.
+5. **pdf** — analyze PDFs when relevant (legal docs, reports, studies).
+6. **read** — read workspace files when context references them.
+7. **exec** — run scripts if calculation or data processing needed.
 
 **If you answer without searching when a search was possible → qaResult = "fail".**
+**Use tavily_search with include_answer=true as default — it returns synthesized answers in seconds.**
 
 ## Source Verification
 - Only cite sources you actually visited via web_search or web_fetch
@@ -106,9 +109,9 @@ LANGUAGE:
 
 | Scope | חיפושים | עומק | מקורות |
 |-------|---------|------|--------|
-| **quick-check** | 1-2 web_search | surface | 1 מקור מספיק |
-| **focused** | 3-5 web_search + 1-2 web_fetch | medium | 2-3 מקורות, צלב |
-| **broad** | 5-10+ web_search + 3+ web_fetch | deep | מקסימום מקורות, ניתוח |
+| **quick-check** | 1-2 tavily_search (include_answer=true) | surface | 1 מקור מספיק |
+| **focused** | 2-4 tavily_search + tavily_extract על URLs מובחרים | medium | 2-3 מקורות, צלב |
+| **broad** | 4-8 tavily_search + tavily_extract (batch) + web_search לצלב | deep | מקסימום מקורות, ניתוח |
 
 ## דוגמאות שימוש
 
