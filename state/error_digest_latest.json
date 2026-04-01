@@ -1,49 +1,49 @@
 {
   "status": "ok",
   "summary": {
-    "total_requests": 9,
+    "total_requests": 17,
     "errors": 0,
     "warnings": 0,
-    "qa_failures": 1,
+    "qa_failures": 2,
     "invariant_violations": 0,
     "slow_requests": 0,
     "error_rate": 0.0,
-    "qa_fail_rate": 0.1111,
-    "avg_duration_ms": 859.7
+    "qa_fail_rate": 0.1176,
+    "avg_duration_ms": 670.9
   },
   "domain_distribution": {
-    "cto": 4,
-    "legal": 1,
-    "scheduling": 1,
-    "automation": 1,
-    "fitness": 1,
+    "cto": 7,
+    "legal": 3,
+    "scheduling": 2,
+    "automation": 2,
+    "fitness": 2,
     "general": 1
   },
   "agent_distribution": {
-    "gabi": 4,
-    "eti": 2,
-    "masha": 1,
-    "dana": 1,
+    "gabi": 7,
+    "eti": 4,
+    "masha": 3,
+    "dana": 2,
     "direct": 1
   },
   "agent_health": {
     "gabi": {
-      "total": 4,
+      "total": 7,
       "errors": 0,
       "health": "healthy"
     },
     "masha": {
-      "total": 1,
+      "total": 3,
       "errors": 0,
       "health": "healthy"
     },
     "eti": {
-      "total": 2,
+      "total": 4,
       "errors": 0,
       "health": "healthy"
     },
     "dana": {
-      "total": 1,
+      "total": 2,
       "errors": 0,
       "health": "healthy"
     },
@@ -58,6 +58,12 @@
   "qa_failures": [
     {
       "execution_id": "exec_20260401_131535_126223101921968",
+      "domain": "cto",
+      "agent": "gabi",
+      "message": "עדכני openclaw"
+    },
+    {
+      "execution_id": "exec_20260401_131620_128648701479600",
       "domain": "cto",
       "agent": "gabi",
       "message": "עדכני openclaw"
