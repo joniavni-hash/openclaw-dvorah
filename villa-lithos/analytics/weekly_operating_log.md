@@ -19,4 +19,11 @@
 - Postiz API key: active
 - Google Drive: 20 assets accessible via gog CLI
 
+### Daily Log
+
+#### 2026-04-01 (רביעי)
+- Heartbeat 09:00 — log updated
+- אין פעולות חדשות לדווח
+- Queue פעיל, פוסטים מתוזמנים כרגיל
+
 ### Weekly review due: 2026-04-03

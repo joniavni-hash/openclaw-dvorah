@@ -55,6 +55,13 @@ class AgentRegistry:
                 'skills': ['automation', 'workflows', 'integration'],
                 'script': 'agents/eti-automation/eti_agent.py',
                 'description': 'מומחית אוטומציה - תהליכים, אינטגרציות'
+            },
+            'gabi': {
+                'name': 'גבי - CTO Agent',
+                'domain': 'cto',
+                'skills': ['system-health', 'updates', 'self-improvement', 'error-analysis'],
+                'script': 'agents/gabi-cto/gabi_agent.py',
+                'description': 'CTO מערכת - בריאות, עדכונים, שיפור עצמי, אבחון שגיאות'
             }
         }
     

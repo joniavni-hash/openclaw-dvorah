@@ -49,6 +49,8 @@ class AgentExecutor:
         
         if agent_name == "odya":
             return self._handle_odya(message, routing_result, metadata)
+        elif agent_name == "gabi":
+            return self._handle_gabi(message, routing_result, metadata)
         elif agent_name == "masha":
             return self._handle_masha(message, routing_result, metadata)
         elif agent_name == "dana":
@@ -382,6 +384,41 @@ class AgentExecutor:
                 "metadata": {**_meta(tier, "system_automation"), "error": str(e)},
             }
 
+
+    def _handle_gabi(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
+        """CTO agent — delegates to GabiAgent.execute()."""
+        tier = routing_result.get("model", "tier1")
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(self.workspace / "agents" / "gabi-cto"))
+            from gabi_agent import GabiAgent
+            agent = GabiAgent()
+            payload = agent.execute(message, {**metadata})
+            pd = payload.to_dict()
+            return {
+                "status": pd.get("status", "ok"),
+                "agent": "גבי",
+                "domain": "cto",
+                "response_type": "system_report",
+                "requires_approval": pd.get("requires_approval", False),
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
+                "summary": pd.get("final_text", ""),
+                "analysis": {"action": "system_report"},
+                "metadata": {**_meta(tier, "system_guardian"),
+                             **pd.get("metadata", {})},
+            }
+        except Exception as e:
+            return {
+                "status": "routed",
+                "agent": "גבי",
+                "domain": "cto",
+                "response_type": "system_report",
+                "requires_approval": False,
+                "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
+                "summary": "System report unavailable",
+                "analysis": {"action": "system_report"},
+                "metadata": {**_meta(tier, "system_guardian"), "error": str(e)},
+            }
 
     def _handle_cost_usage(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
         """Anthropic usage/cost reporter."""

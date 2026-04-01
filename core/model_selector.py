@@ -76,6 +76,7 @@ DOMAIN_DEFAULT_TIER = {
     "group_retrieval":  "tier1",
     "scheduling":       "tier1",
     "automation":       "tier1",
+    "cto":              "tier1",
     "general":          "tier2",
     "email":            "tier2",
     "research":         "tier2",
