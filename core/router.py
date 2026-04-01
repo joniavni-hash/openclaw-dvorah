@@ -104,9 +104,10 @@ class Router:
             ],
             "cto": [
                 r"מצב.*מערכת|system.*status|system.*health",
-                r"עדכון.*openclaw|update.*openclaw|גרסה.*openclaw",
+                r"openclaw|גרסה.*מערכת|version.*check",
+                r"עדכני.*openclaw|עדכון.*מערכת|update.*system",
                 r"שגיאות.*מערכת|errors.*system|תקלות",
-                r"שיפור.*מערכת|self.*improve|regression",
+                r"שיפור.*מערכת|שיפור.*תיקונים|self.*improve|regression",
                 r"health.*check|בריאות.*מערכת|בדיקת.*תקינות",
                 r"תיקונים|corrections|דפוסי.*שגיאות",
             ],
