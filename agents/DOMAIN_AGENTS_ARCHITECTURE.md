@@ -5,7 +5,7 @@
 
 ## Overview
 
-Dvorah's agent ecosystem consists of **7 domain agents**, each specialized for a specific area.
+Dvorah's agent ecosystem consists of **8 domain agents**, each specialized for a specific area.
 All agents share a unified architecture with multi-tier cost optimization.
 
 ```
@@ -49,7 +49,8 @@ All agents share a unified architecture with multi-tier cost optimization.
 | 4 | 🤖 | אתי (Eti) | automation | `agents/eti-automation/` | T1:75% T2:20% T3:5% |
 | 5 | 📱 | אודיה (Odya) | group | `agents/odya-whatsapp/` | T1:85% T2:10% T3:5% |
 | 6 | ⚖️ | מאשה (Masha) | legal | `agents/legal-agent/` | T1:70% T2:20% T3:10% |
-| 7 | 👑 | דבורה (Dvorah) | general | orchestrator | Session model |
+| 7 | 🔧 | גבי (Gabi) | cto | `agents/gabi-cto/` | T1:80% T2:20% T3:0% |
+| 8 | 👑 | דבורה (Dvorah) | general | orchestrator | Session model |
 
 ## Unified Architecture
 
@@ -146,6 +147,9 @@ agents/
 │   ├── odya_agent.py                # OdyaAgent class
 │   ├── odya_prompt.md               # Spawn prompt (migrated from group_agent_prompt.md)
 │   └── odya_agent_legacy.py         # Backward-compat wrapper
+├── gabi-cto/
+│   ├── gabi_agent.py                # GabiAgent class
+│   └── gabi_prompt.md               # Spawn prompt
 ├── legal-agent/                     # Existing — מאשה (unchanged)
 │   ├── advanced/                    # Multi-tier pipeline
 │   └── ...
@@ -189,6 +193,7 @@ agents/
 | אתי | `workspace-eti/`, `scripts/health_check.py`, HEARTBEAT |
 | אודיה | `state/KNOWN_GROUPS.md`, `scripts/group_messages.py` |
 | מאשה | `legal_intent_classifier.py`, multi-tier pipeline |
+| גבי | `scripts/health_check.py`, `scripts/error_digest.py`, `scripts/metrics.py` |
 
 ## Backward Compatibility
 
