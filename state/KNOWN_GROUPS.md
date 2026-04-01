@@ -70,8 +70,9 @@
 - draft_mode: false
 - initiate: no
 - requireMention: true
+- mentionTriggers: [דבורה, דבי, dvorah, dvora]
 - keywords: [agent, alma, integration]
-- notes: רני שותף עבודה. Alma הסוכנת שלו. לענות רק כשפונים בשם.
+- notes: רני שותף עבודה. Alma הסוכנת שלו. לענות רק כשפונים בשם — תיוג או אזכור בטקסט.
 
 ---
 

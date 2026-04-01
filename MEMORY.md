@@ -28,6 +28,10 @@
 - **ספק:** 019 Mobile
 - **מטרה:** WhatsApp ייעודי לדבורה (לא מחובר עדיין — ממתין לאימות)
 
+## Capabilities Built
+
+- **צופית — ערוצי טלגרם:** צופית יכולה לשלוף ולסכם הודעות מכל ערוץ טלגרם ציבורי דרך `scripts/telegram_channels.py`. שימוש: "סכמי מה היה ב-[ערוץ] בשעות האחרונות". ערוצים מוכרים: AbuAliExpress, kann_news, Israel_army, MiddleEastSpectator.
+
 ## Current Projects
 
 _(Update as projects come and go)_
