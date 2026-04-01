@@ -59,8 +59,8 @@ class Router:
 
         self.patterns = {
             "legal": [
-                r"חוזה|הסכם|contract|legal",
-                r"משפטי|דין|law|clause",
+                r"חוזה|הסכם|contract|\blegal\b",
+                r"משפטי|דין|\blaw\b|clause",
                 r"סיכום.{0,10}חוזה|contract.{0,10}review",
                 r"סעיף|תנאי|terms|condition",
             ],
@@ -117,7 +117,7 @@ class Router:
                 r"cron|heartbeat|scheduled",
             ],
             "scheduling": [
-                r"מתי|when|תזכיר|remind",
+                r"\bמתי\b|\bwhen\b|תזכיר|remind",
                 r"פגישה|meeting|appointment",
                 r"יומן|calendar|schedule",
             ],
