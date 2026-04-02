@@ -12,7 +12,6 @@
 
 | שעה | משימה |
 |-----|--------|
-| 07:00-09:00 | `python3 scripts/orchestrator.py --message "מצב המערכת" --source heartbeat` — גבי מריץ health + errors + version |
 | 09:00-11:00 | Villa: תעדי ב-villa-lithos/analytics/weekly_operating_log.md |
 | 12:00-14:00 | בדקי OPEN_TASKS.md — 🔴 3+ ימים / 🟡 7+ ימים / deadline עבר → תזכורת |
 | 18:00-20:00 | `python3 scripts/group_messages.py "120363418497534459" --days 1` → אודיה מסכמת → שלחי ל-120363425514726135@g.us |
