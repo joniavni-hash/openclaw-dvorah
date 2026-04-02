@@ -162,16 +162,10 @@ class Router:
     def classify_message(self, message: str, channel: str = None,
                          group_id: str = None) -> Dict:
         if channel == "whatsapp" and group_id:
-            # Direct mention of Dvorah in group — route to me, not odya
-            DVORAH_TRIGGERS = ["דבורה", "דבי", "dvorah", "dvora"]
-            msg_lower = message.lower().strip()
-            if any(t.lower() in msg_lower for t in DVORAH_TRIGGERS):
-                return {
-                    "domain": "general",
-                    "confidence": 0.95,
-                    "agent": "direct",
-                    "reason": "Direct mention of Dvorah in group — routing directly",
-                }
+            # ALL group messages go through odya — never treat as DM.
+            # Exec approvals and internal commands must NEVER appear in groups.
+            # Dvorah mention detection is handled inside odya/group_agent_prompt,
+            # not at the routing layer.
             return {
                 "domain": "whatsapp_group",
                 "confidence": 0.9,
