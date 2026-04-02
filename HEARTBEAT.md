@@ -21,7 +21,6 @@
 
 ## ראשון בלבד
 - 09:00+: `python3 scripts/orchestrator.py --message "שיפור מתיקונים" --source heartbeat` — גבי מנתח corrections
-- 07:30-09:00: "בוקר טוב! יום שקילה — תעלה על המשקל ותשלח לי."
 - 09:00+: `python3 scripts/metrics.py` → סיכום
 - 19:30+: סיכום דיאטה שבועי
 
