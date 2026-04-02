@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Agent Executor - Routes to domain agents and returns structured results.
+Agent Executor - Routes to domain agents via isolated spawns or local execution.
 
-PR2: All agents are now wired up to their real execute() methods.
-Each agent returns FinalPayload which is normalized to pipeline dict format.
+PR3: Spawn-based architecture.
+- Tzofit, Eti, Odya (group msgs): SPAWN as isolated API calls (small context)
+- Dana, Tali, Gabi: LOCAL execution (they do real computation, no API needed)
+- Masha: REMOVED
+
+This keeps Dvorah's context small — agent work happens in separate API calls.
 """
 
 import json
@@ -51,8 +55,6 @@ class AgentExecutor:
             return self._handle_odya(message, routing_result, metadata)
         elif agent_name == "gabi":
             return self._handle_gabi(message, routing_result, metadata)
-        elif agent_name == "masha":
-            return self._handle_masha(message, routing_result, metadata)
         elif agent_name == "dana":
             return self._handle_dana(message, routing_result, metadata)
         elif agent_name == "tzofit":
@@ -75,47 +77,15 @@ class AgentExecutor:
             }
 
     def _handle_odya(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """WhatsApp group agent — analyze message or retrieve group data."""
+        """WhatsApp group agent — SPAWNS as isolated API call."""
+        from agent_spawner import spawn_odya
+
         domain = routing_result.get("classification", {}).get("domain", "whatsapp_group")
         group_id = metadata.get("group_id") or routing_result.get("group_id", "unknown")
         role = metadata.get("role", "active")
+        tier = routing_result.get("model", "tier1")
 
-        # DM query about a group → call odya_agent for real retrieval
-        if domain == "group_retrieval":
-            tier = routing_result.get("model", "tier1")
-            try:
-                import sys as _sys
-                _sys.path.insert(0, str(self.workspace / "agents" / "odya-whatsapp"))
-                from odya_agent import OdyaAgent
-                agent = OdyaAgent()
-                payload = agent.execute(message, {**metadata, "domain": domain})
-                pd = payload.to_dict()
-                # Normalize to pipeline-expected shape
-                return {
-                    "status": "analysis_ready",
-                    "agent": "אודיה",
-                    "domain": "group_retrieval",
-                    "response_type": "group_retrieval",
-                    "requires_approval": False,
-                    "summary": pd.get("final_text", ""),
-                    "analysis": {"should_respond": True},
-                    "metadata": {**_meta(tier, "group_retrieval"),
-                                 **pd.get("metadata", {}),
-                                 "group_id": group_id},
-                }
-            except Exception as e:
-                return {
-                    "status": "analysis_ready",
-                    "agent": "אודיה",
-                    "domain": "group_retrieval",
-                    "summary": "אין הודעות שמורות מהקבוצה",
-                    "analysis": {"should_respond": True},
-                    "metadata": {**_meta(tier, "group_retrieval"),
-                                 "group_id": group_id, "error": str(e)},
-                }
-        confidence = routing_result.get("classification", {}).get("confidence", 0.9)
-        
-        # Observer role → always silence
+        # Observer role → always silence (no API call needed)
         if role == "observer":
             return {
                 "status": "analysis_ready",
@@ -123,110 +93,49 @@ class AgentExecutor:
                 "domain": "whatsapp_group",
                 "response_type": "group_analysis",
                 "requires_approval": False,
-                "confidence": confidence,
                 "summary": f"Group {group_id}: observer role — no response",
-                "analysis": {
-                    "should_respond": False,
-                    "reason": "observer role",
-                    "confidence": confidence,
-                },
-                "draft_actions": {
-                    "approval_reason": "Observer role — auto-silence",
-                    "action": "none",
-                },
-                "metadata": {**_meta(routing_result.get("model", "tier1"), "group_communication"),
+                "analysis": {"should_respond": False, "reason": "observer role"},
+                "metadata": {**_meta(tier, "group_communication"),
                     "group_id": group_id, "role": role},
             }
-        
-        # Active / responder / representative → assemble real prompt with context
-        assembled_prompt = None
-        context_files_read = []
+
+        # Assemble extra context from group_agent_context if available
+        extra_ctx = ""
         try:
             import sys as _sys
             _sys.path.insert(0, str(self.workspace / "scripts"))
             from group_agent_context import assemble_prompt
-            recent_msgs = metadata.get("recent_messages")
-            assembled_prompt = assemble_prompt(group_id, message, recent_msgs)
-            context_files_read = [
-                "state/KNOWN_GROUPS.md",
-                "state/GROUP_MEMBERS.md",
-                "state/GROUP_MEMORY.md",
-                "agents/group_agent_prompt.md",
-            ]
+            extra_ctx = assemble_prompt(group_id, message, metadata.get("recent_messages")) or ""
         except Exception:
-            pass  # Graceful degradation: pipeline works without assembled prompt
+            pass
 
-        return {
-            "status": "analysis_ready",
-            "agent": "אודיה",
-            "domain": "whatsapp_group",
-            "response_type": "group_analysis",
-            "requires_approval": False,  # approval happens at send time, not analysis
-            "confidence": confidence,
-            "summary": f"Group {group_id} (role: {role}): message queued for analysis",
-            "analysis": {
-                "should_respond": None,  # determined after prompt execution
-                "confidence": confidence,
-                "pending_prompt": True,
-            },
-            "draft_actions": {
-                "approval_reason": f"Group analysis for {group_id}",
-                "action": "spawn_odya_prompt",
-                "prepare_cmd": f'python3 agents/whatsapp_group_agent.py --prepare --group-id "{group_id}"',
-            },
-            "context_payload": {
-                "assembled_prompt": assembled_prompt,
-                "prompt_template": "agents/group_agent_prompt.md",
-                "context_files_read": context_files_read,
-                "group_id": group_id,
-            } if assembled_prompt else None,
-            "metadata": {
-                "model_tier": routing_result.get("model", "tier1"),
-                "group_id": group_id,
-                "role": role,
-                "specialization": "group_communication",
-            },
-        }
+        # SPAWN: isolated API call with small context
+        result = spawn_odya(message, group_id, role, extra_context=extra_ctx)
 
-    def _handle_masha(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Legal agent — delegates to MashaAgent.execute()."""
-        tier = routing_result.get("model", "tier2")
-        try:
-            import sys as _sys
-            _sys.path.insert(0, str(self.workspace / "agents" / "masha"))
-            from masha_agent import MashaAgent
-            agent = MashaAgent()
-            payload = agent.execute(message, {**metadata})
-            pd = payload.to_dict()
+        if result["status"] == "ok":
             return {
-                "status": pd.get("status", "needs_approval"),
-                "agent": "מאשה",
-                "domain": "legal",
-                "response_type": "legal_analysis",
-                "requires_approval": pd.get("requires_approval", True),
-                "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
-                "summary": pd.get("final_text", ""),
-                "draft_actions": {
-                    "approval_reason": "Legal content requires manual review before sending",
-                    "action": "legal_review",
-                },
-                "metadata": {**_meta(tier, "legal_analysis"),
-                             **pd.get("metadata", {})},
+                "status": "analysis_ready",
+                "agent": "אודיה",
+                "domain": domain,
+                "response_type": "group_analysis",
+                "requires_approval": False,
+                "summary": result["response_text"],
+                "analysis": {"should_respond": True, "spawned": True},
+                "metadata": {**_meta(tier, "group_communication"),
+                    "group_id": group_id, "role": role,
+                    "spawn_tokens": result.get("tokens", {}),
+                    "spawn_cost": result.get("cost_usd", 0),
+                    "spawn_duration_ms": result.get("duration_ms", 0)},
             }
-        except Exception as e:
+        else:
             return {
-                "status": "draft_ready",
-                "agent": "מאשה",
-                "domain": "legal",
-                "response_type": "legal_analysis",
-                "requires_approval": True,
-                "confidence": routing_result.get("classification", {}).get("confidence", 0.8),
-                "summary": "Legal analysis queued for review",
-                "draft_actions": {
-                    "approval_reason": "Legal content requires manual review before sending",
-                    "action": "legal_review",
-                },
-                "metadata": {**_meta(tier, "legal_analysis"), "error": str(e)},
+                "status": "analysis_ready",
+                "agent": "אודיה",
+                "domain": domain,
+                "summary": f"Group {group_id}: spawn failed",
+                "analysis": {"should_respond": False},
+                "metadata": {**_meta(tier, "group_communication"),
+                    "group_id": group_id, "error": result.get("error", "unknown")},
             }
 
     def _handle_dana(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
@@ -279,41 +188,35 @@ class AgentExecutor:
             }
 
     def _handle_tzofit(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Research agent — delegates to TzofitAgent.execute()."""
+        """Research agent — SPAWNS as isolated API call."""
+        from agent_spawner import spawn_tzofit
         tier = routing_result.get("model", "tier2")
-        try:
-            import sys as _sys
-            _sys.path.insert(0, str(self.workspace / "agents" / "tzofit-research"))
-            from tzofit_agent import TzofitAgent
-            agent = TzofitAgent()
-            payload = agent.execute(message, {**metadata})
-            pd = payload.to_dict()
+
+        result = spawn_tzofit(message)
+
+        if result["status"] == "ok":
             return {
-                "status": pd.get("status", "ok"),
-                "agent": "צופית",
-                "domain": "research",
-                "response_type": "research_analysis",
-                "requires_approval": pd.get("requires_approval", False),
-                "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
-                "summary": pd.get("final_text", ""),
-                "analysis": {
-                    "query": message[:100],
-                    "action": "conduct_research",
-                },
-                "metadata": {**_meta(tier, "information_gathering"),
-                             **pd.get("metadata", {})},
-            }
-        except Exception as e:
-            return {
-                "status": "research_ready",
+                "status": "ok",
                 "agent": "צופית",
                 "domain": "research",
                 "response_type": "research_analysis",
                 "requires_approval": False,
                 "confidence": routing_result.get("classification", {}).get("confidence", 0.7),
-                "summary": "Research query queued for processing",
-                "analysis": {"query": message[:100], "action": "conduct_research"},
-                "metadata": {**_meta(tier, "information_gathering"), "error": str(e)},
+                "summary": result["response_text"],
+                "analysis": {"query": message[:100], "spawned": True},
+                "metadata": {**_meta(tier, "information_gathering"),
+                    "spawn_tokens": result.get("tokens", {}),
+                    "spawn_cost": result.get("cost_usd", 0),
+                    "spawn_duration_ms": result.get("duration_ms", 0)},
+            }
+        else:
+            return {
+                "status": "research_ready",
+                "agent": "צופית",
+                "domain": "research",
+                "summary": f"Research spawn failed: {result.get('error', 'unknown')}",
+                "analysis": {"query": message[:100]},
+                "metadata": {**_meta(tier, "information_gathering"), "error": result.get("error")},
             }
 
     def _handle_tali(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
@@ -350,38 +253,35 @@ class AgentExecutor:
             }
 
     def _handle_eti(self, message: str, routing_result: Dict, metadata: Dict) -> Dict:
-        """Automation agent — delegates to EtiAgent.execute()."""
+        """Automation agent — SPAWNS as isolated API call."""
+        from agent_spawner import spawn_eti
         tier = routing_result.get("model", "tier1")
-        try:
-            import sys as _sys
-            _sys.path.insert(0, str(self.workspace / "agents" / "eti-automation"))
-            from eti_agent import EtiAgent
-            agent = EtiAgent()
-            payload = agent.execute(message, {**metadata})
-            pd = payload.to_dict()
+
+        result = spawn_eti(message)
+
+        if result["status"] == "ok":
             return {
-                "status": pd.get("status", "ok"),
-                "agent": "אתי",
-                "domain": "automation",
-                "response_type": "automation_task",
-                "requires_approval": pd.get("requires_approval", False),
-                "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
-                "summary": pd.get("final_text", ""),
-                "analysis": {"action": "system_check"},
-                "metadata": {**_meta(tier, "system_automation"),
-                             **pd.get("metadata", {})},
-            }
-        except Exception as e:
-            return {
-                "status": "routed",
+                "status": "ok",
                 "agent": "אתי",
                 "domain": "automation",
                 "response_type": "automation_task",
                 "requires_approval": False,
                 "confidence": routing_result.get("classification", {}).get("confidence", 0.5),
-                "summary": "Automation task queued",
+                "summary": result["response_text"],
+                "analysis": {"action": "system_check", "spawned": True},
+                "metadata": {**_meta(tier, "system_automation"),
+                    "spawn_tokens": result.get("tokens", {}),
+                    "spawn_cost": result.get("cost_usd", 0),
+                    "spawn_duration_ms": result.get("duration_ms", 0)},
+            }
+        else:
+            return {
+                "status": "routed",
+                "agent": "אתי",
+                "domain": "automation",
+                "summary": f"Automation spawn failed: {result.get('error', 'unknown')}",
                 "analysis": {"action": "system_check"},
-                "metadata": {**_meta(tier, "system_automation"), "error": str(e)},
+                "metadata": {**_meta(tier, "system_automation"), "error": result.get("error")},
             }
 
 

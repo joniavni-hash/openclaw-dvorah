@@ -51,7 +51,6 @@ def _auto_git_push(execution_id: str) -> None:
 DOMAIN_AGENT_OWNERS: Dict[str, str] = {
     "fitness":          "dana",
     "marketing":        "tali",
-    "legal":            "masha",
     "group_retrieval":  "odya",
     "whatsapp_group":   "odya",
     "research":         "tzofit",

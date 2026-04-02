@@ -58,12 +58,7 @@ class Router:
             self.health_monitor = None
 
         self.patterns = {
-            "legal": [
-                r"חוזה|הסכם|contract|\blegal\b",
-                r"משפטי|דין|\blaw\b|clause",
-                r"סיכום.{0,10}חוזה|contract.{0,10}review",
-                r"סעיף|תנאי|terms|condition",
-            ],
+
             # PR3: group_retrieval — DM asking *about* a group (not a group message itself)
             "group_retrieval": [
                 r"קבוצה.{0,20}(של|ב|מ)",
@@ -135,7 +130,7 @@ class Router:
         "whatsapp_group":  ["state/KNOWN_GROUPS.md", "state/GROUP_MEMBERS.md", "state/GROUP_MEMORY.md"],
         "group_retrieval": ["state/KNOWN_GROUPS.md", "state/GROUP_MEMBERS.md", "state/GROUP_MEMORY.md"],
         "fitness":         ["state/fitness_tracker.md"],
-        "legal":           ["state/OPEN_TASKS.md"],
+
         "marketing":       ["state/OPEN_TASKS.md", "state/VILLA_LITHOS_PROFILE.md"],
         "research":        ["state/OPEN_TASKS.md"],
         "cto":             ["state/health_check.json", "state/error_digest_latest.json", "state/OPEN_TASKS.md"],
@@ -146,7 +141,6 @@ class Router:
     }
 
     DOMAIN_TIERS: Dict[str, str] = {
-        "legal":            "tier2",   # PR1: was tier3 — downgraded
         "whatsapp_group":   "tier1",   # always cheap
         "cost_usage":       "tier1",
         "group_retrieval":  "tier1",   # retrieval is cheap
@@ -186,7 +180,7 @@ class Router:
             best = max(scores, key=scores.get)
             confidence = min(scores[best] * 2, 1.0)
             agent_map = {
-                "legal":            "masha",
+
                 "fitness":          "dana",
                 "whatsapp_group":   "odya",
                 "group_retrieval":  "odya",   # DM asking about a group → odya retrieves

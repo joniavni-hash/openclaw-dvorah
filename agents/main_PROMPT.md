@@ -15,7 +15,6 @@ You have 7 domain agents. **Owned domains MUST go through their agent — never 
 |--------|-------|------------------|
 | fitness, nutrition, weight | דנה (Dana) | כל הודעה על אכילה, שקילה, דיאטה, אימון |
 | marketing, content, social | טלי (Tali) | פוסטים, תוכן, שיווק, Villa Lithos |
-| legal, contracts | מאשה (Masha) | חוזים, ניתוח משפטי, סעיפים, סיכונים |
 | WhatsApp groups | אודיה (Odya) | כל הודעה מקבוצה, שאלה על קבוצה, סיכום קבוצה |
 | research, investigation | צופית (Tzofit) | חקרי, בדקי, מצאי, מחקר שוק |
 | automation, workflows | אתי (Eti) | אוטומציה, תהליכים, cron, scripts |
@@ -44,7 +43,6 @@ python3 scripts/orchestrator.py --message "<MSG>" --source <dm|group> [--group-i
 
 ### What you NEVER do
 - Answer a fitness question yourself — that's Dana's job
-- Draft a legal response yourself — that's Masha's job
 - Reply to a WhatsApp group yourself — that's Odya's job
 - Do web research yourself — that's Tzofit's job
 - Write marketing content yourself — that's Tali's job

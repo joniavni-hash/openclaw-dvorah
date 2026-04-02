@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-03-30T05:14:33.954883+00:00",
+  "generated_at": "2026-04-02T14:40:34.794152+00:00",
   "period_days": 30,
-  "total_sessions": 23,
-  "total_response_pairs": 518,
+  "total_sessions": 37,
+  "total_response_pairs": 828,
   "model_stats": {
     "claude-3-5-haiku-20241022": {
       "count": 1,
@@ -29,20 +29,20 @@
       "avg_tool_calls": 1.9
     },
     "sonnet": {
-      "count": 363,
-      "avg_latency": 12.5,
-      "median_latency": 9.08,
-      "p90_latency": 21.62,
-      "p99_latency": 72.68,
-      "avg_tool_calls": 5.85
+      "count": 673,
+      "avg_latency": 11.26,
+      "median_latency": 7.98,
+      "p90_latency": 19.89,
+      "p99_latency": 68.86,
+      "avg_tool_calls": 4.03
     }
   },
   "cost": {
-    "today": 1.275459,
-    "this_week": 1.275459,
-    "last_30d": 228.194071
+    "today": 15.784992,
+    "this_week": 58.733565,
+    "last_30d": 285.557674
   },
-  "total_output_tokens": 959493,
+  "total_output_tokens": 1167049,
   "corrections": {
     "total": 0,
     "new": 0,
@@ -55,29 +55,41 @@
     "red": 1,
     "yellow": 4,
     "green": 3,
-    "stuck_3d": 2,
-    "stuck_7d": 11
+    "stuck_3d": 0,
+    "stuck_7d": 13
   },
   "busiest_hours_utc": {
-    "17": 56,
-    "18": 55,
-    "14": 49,
-    "12": 45,
-    "11": 39,
-    "16": 31,
-    "5": 29,
-    "15": 29
+    "17": 64,
+    "8": 64,
+    "12": 63,
+    "18": 61,
+    "15": 58,
+    "5": 55,
+    "14": 53,
+    "11": 52
   },
   "activity_by_weekday": {
-    "Monday": 20,
-    "Tuesday": 187,
-    "Wednesday": 120,
-    "Thursday": 52,
+    "Monday": 84,
+    "Tuesday": 265,
+    "Wednesday": 214,
+    "Thursday": 127,
     "Friday": 36,
-    "Saturday": 32,
+    "Saturday": 31,
     "Sunday": 71
   },
   "slowest_responses": [
+    {
+      "latency_s": 194.462,
+      "model": "sonnet",
+      "timestamp": "2026-03-30T15:53:58.106000+00:00",
+      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3AC9AF486F6ABC1B06D9\",\n  \"sender_id\": \"18537179529435"
+    },
+    {
+      "latency_s": 173.339,
+      "model": "sonnet",
+      "timestamp": "2026-03-31T21:20:33.619000+00:00",
+      "user_text": "[Wed 2026-04-01 00:20 GMT+3] OpenClaw runtime context (internal):\nThis context is runtime-generated, not user-authored. "
+    },
     {
       "latency_s": 96.076,
       "model": "sonnet",
@@ -95,18 +107,6 @@
       "model": "sonnet",
       "timestamp": "2026-03-24T14:07:18.028000+00:00",
       "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"961\",\n  \"sender_id\": \"539224224\",\n  \"sender\": \"Yoni A"
-    },
-    {
-      "latency_s": 77.97,
-      "model": "sonnet",
-      "timestamp": "2026-03-27T09:13:52.657000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A9F81FC24C349068322\",\n  \"sender_id\": \"+972543333556\""
-    },
-    {
-      "latency_s": 69.442,
-      "model": "sonnet",
-      "timestamp": "2026-03-24T07:19:47.393000+00:00",
-      "user_text": "Conversation info (untrusted metadata):\n```json\n{\n  \"message_id\": \"3A42994A66015FFFB550\",\n  \"sender_id\": \"+972543333556\""
     }
   ]
 }

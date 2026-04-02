@@ -81,7 +81,7 @@ DOMAIN_DEFAULT_TIER = {
     "email":            "tier2",
     "research":         "tier2",
     "marketing":        "tier2",
-    "legal":            "tier2",   # tier3 requires explicit justification
+
 }
 
 # ── Daily cost tracking ────────────────────────────────────────────────────────
