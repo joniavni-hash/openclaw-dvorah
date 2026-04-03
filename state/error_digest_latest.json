@@ -1,111 +1,110 @@
 {
   "status": "ok",
   "summary": {
-    "total_requests": 37,
+    "total_requests": 18,
     "errors": 0,
     "warnings": 0,
-    "qa_failures": 7,
+    "qa_failures": 0,
     "invariant_violations": 0,
-    "slow_requests": 0,
+    "slow_requests": 6,
     "error_rate": 0.0,
-    "qa_fail_rate": 0.1892,
-    "avg_duration_ms": 491.9
+    "qa_fail_rate": 0.0,
+    "avg_duration_ms": 11448.8
   },
   "domain_distribution": {
-    "cto": 14,
-    "legal": 6,
-    "scheduling": 4,
-    "automation": 4,
-    "fitness": 4,
-    "general": 3,
-    "research": 2
+    "cto": 5,
+    "general": 4,
+    "research": 3,
+    "fitness": 2,
+    "marketing": 2,
+    "automation": 2
   },
   "agent_distribution": {
-    "gabi": 14,
-    "eti": 8,
-    "masha": 6,
-    "dana": 4,
-    "direct": 3,
-    "tzofit": 2
+    "gabi": 5,
+    "direct": 4,
+    "tzofit": 3,
+    "dana": 2,
+    "tali": 2,
+    "eti": 2
   },
   "agent_health": {
     "gabi": {
-      "total": 14,
-      "errors": 0,
-      "health": "healthy"
-    },
-    "masha": {
-      "total": 6,
-      "errors": 0,
-      "health": "healthy"
-    },
-    "eti": {
-      "total": 8,
+      "total": 5,
       "errors": 0,
       "health": "healthy"
     },
     "dana": {
-      "total": 4,
+      "total": 2,
       "errors": 0,
       "health": "healthy"
     },
-    "direct": {
-      "total": 3,
+    "tali": {
+      "total": 2,
       "errors": 0,
       "health": "healthy"
     },
     "tzofit": {
+      "total": 3,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "eti": {
       "total": 2,
+      "errors": 0,
+      "health": "healthy"
+    },
+    "direct": {
+      "total": 4,
       "errors": 0,
       "health": "healthy"
     }
   },
   "errors": [],
   "warnings": [],
-  "qa_failures": [
-    {
-      "execution_id": "exec_20260401_131535_126223101921968",
-      "domain": "cto",
-      "agent": "gabi",
-      "message": "עדכני openclaw"
-    },
-    {
-      "execution_id": "exec_20260401_131620_128648701479600",
-      "domain": "cto",
-      "agent": "gabi",
-      "message": "עדכני openclaw"
-    },
-    {
-      "execution_id": "exec_20260401_131628_128648701482864",
-      "domain": "general",
-      "agent": "direct",
-      "message": "מה נשמע?"
-    },
-    {
-      "execution_id": "exec_20260401_131722_123370273721008",
-      "domain": "cto",
-      "agent": "gabi",
-      "message": "עדכני openclaw"
-    },
-    {
-      "execution_id": "exec_20260401_131725_123370277190128",
-      "domain": "cto",
-      "agent": "gabi",
-      "message": "שיפור מתיקונים"
-    },
-    {
-      "execution_id": "exec_20260401_131730_123370273724272",
-      "domain": "general",
-      "agent": "direct",
-      "message": "מה נשמע?"
-    },
-    {
-      "execution_id": "exec_20260401_131730_123370273871856",
-      "domain": "scheduling",
-      "agent": "eti",
-      "message": "מתי הפגישה?"
-    }
-  ],
+  "qa_failures": [],
   "invariant_violations": [],
-  "slow_requests": []
+  "slow_requests": [
+    {
+      "execution_id": "exec_20260402_181601_123188220204624",
+      "duration_ms": 74625,
+      "domain": "research",
+      "agent": "tzofit",
+      "message": "תחקרי טיסות למינכן"
+    },
+    {
+      "execution_id": "exec_20260402_181715_123188220204720",
+      "duration_ms": 30836,
+      "domain": "automation",
+      "agent": "eti",
+      "message": "תעשי אוטומציה"
+    },
+    {
+      "execution_id": "exec_20260402_191608_133348675765808",
+      "duration_ms": 5350,
+      "domain": "cto",
+      "agent": "gabi",
+      "message": "בצע health check מלא — שירותים, שגיאות, גרסה, עלות, corrections"
+    },
+    {
+      "execution_id": "exec_20260402_191621_140394213181456",
+      "duration_ms": 34388,
+      "domain": "research",
+      "agent": "tzofit",
+      "message": "בצע health check מלא"
+    },
+    {
+      "execution_id": "exec_20260402_191651_137861574997056",
+      "duration_ms": 28562,
+      "domain": "automation",
+      "agent": "eti",
+      "message": "תעשי אוטומציה לגיבוי"
+    },
+    {
+      "execution_id": "exec_20260402_191722_137861573711344",
+      "duration_ms": 21287,
+      "domain": "research",
+      "agent": "tzofit",
+      "message": "תחקרי טיסות למינכן"
+    }
+  ]
 }
