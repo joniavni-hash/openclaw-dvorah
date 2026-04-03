@@ -49,13 +49,7 @@ class AgentRegistry:
                 'script': 'agents/odya-whatsapp/odya_agent.py',
                 'description': 'מתאמת קבוצות WhatsApp - סיכומים, תקשורת'
             },
-            'eti': {
-                'name': 'אתי - Automation Agent', 
-                'domain': 'automation',
-                'skills': ['automation', 'workflows', 'integration'],
-                'script': 'agents/eti-automation/eti_agent.py',
-                'description': 'מומחית אוטומציה - תהליכים, אינטגרציות'
-            },
+
             'gabi': {
                 'name': 'גבי - CTO Agent',
                 'domain': 'cto',

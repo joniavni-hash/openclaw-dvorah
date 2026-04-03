@@ -106,11 +106,7 @@ class Router:
                 r"health.*check|בריאות.*מערכת|בדיקת.*תקינות",
                 r"תיקונים|corrections|דפוסי.*שגיאות|מתיקונים",
             ],
-            "automation": [
-                r"אוטומציה|automation|monitor",
-                r"סקריפט|script|workflow|תהליך",
-                r"cron|heartbeat|scheduled",
-            ],
+
             "scheduling": [
                 r"\bמתי\b|\bwhen\b|תזכיר|remind",
                 r"פגישה|meeting|appointment",
@@ -134,7 +130,6 @@ class Router:
         "marketing":       ["state/OPEN_TASKS.md", "state/VILLA_LITHOS_PROFILE.md"],
         "research":        ["state/OPEN_TASKS.md"],
         "cto":             ["state/health_check.json", "state/error_digest_latest.json", "state/OPEN_TASKS.md"],
-        "automation":      ["state/OPEN_TASKS.md", "state/eti_alerts.md"],
         "scheduling":      ["state/OPEN_TASKS.md"],
         "general":         ["state/OPEN_TASKS.md"],
         "cost_usage":      [],
@@ -148,7 +143,6 @@ class Router:
         "research":         "tier2",
         "marketing":        "tier2",
         "cto":              "tier1",
-        "automation":       "tier1",
         "scheduling":       "tier1",
         "general":          "tier2",
     }
@@ -185,10 +179,9 @@ class Router:
                 "whatsapp_group":   "odya",
                 "group_retrieval":  "odya",   # DM asking about a group → odya retrieves
                 "research":         "tzofit",
-                "scheduling":       "eti",
+                "scheduling":       "gabi",
                 "cto":              "gabi",
                 "marketing":        "tali",
-                "automation":       "eti",
                 "cost_usage":       "cost_reporter",
             }
             return {

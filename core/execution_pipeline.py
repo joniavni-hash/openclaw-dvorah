@@ -54,8 +54,7 @@ DOMAIN_AGENT_OWNERS: Dict[str, str] = {
     "group_retrieval":  "odya",
     "whatsapp_group":   "odya",
     "research":         "tzofit",
-    "automation":       "eti",
-    "scheduling":       "eti",
+    "scheduling":       "gabi",
     "cto":              "gabi",
     "cost_usage":       "cost_reporter",
 }

@@ -15,9 +15,7 @@
 | whatsapp_group | אודיה 📱 (isolated API) | הודעה מקבוצה, מה חדש בקבוצה, סיכום |
 | group_retrieval | אודיה 📱 | מה כתבו בקבוצה של אלון? |
 | research | צופית 🔍 (isolated API) | תחקרי טיסות, מחקר שוק, השוואה |
-| automation | אתי 🤖 (isolated API) | health check, מצב מערכת, אוטומציה |
-| scheduling | אתי 🤖 | תזכורות, יומן, פגישות |
-| cto | גבי 🔧 | מצב מערכת, עדכון openclaw, שגיאות, שיפור |
+| cto / automation / scheduling | גבי 🔧 | מצב מערכת, עדכון, אוטומציה, תזכורות, שגיאות |
 | general | דבורה 🧭 | שיחה כללית, שאלות מטא, follow-up |
 
 ---

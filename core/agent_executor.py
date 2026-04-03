@@ -61,8 +61,6 @@ class AgentExecutor:
             return self._handle_tzofit(message, routing_result, metadata)
         elif agent_name == "tali":
             return self._handle_tali(message, routing_result, metadata)
-        elif agent_name == "eti":
-            return self._handle_eti(message, routing_result, metadata)
         elif agent_name == "cost_reporter" or classification.get("domain") == "cost_usage":
             return self._handle_cost_usage(message, routing_result, metadata)
         else:
