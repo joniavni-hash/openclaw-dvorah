@@ -18,10 +18,14 @@ from router import route_message
 from context_guard import context_status, emergency_compact
 from agent_executor import AgentExecutor
 from action_executor import execute_if_approved, send_response_if_ready, reset_send_gate
-from model_selector import select_model, ModelDecision
+from model_selector import select_model, ModelDecision, TIER_RANK
+
+def _rank(tier: str) -> int:
+    return TIER_RANK.get(tier, 2)
 from history_selector import select_relevant_history
 from context_guard import build_ordered_prompt
 from deterministic_handlers import try_deterministic
+from cost_trace import record as cost_record, daily_rollup as cost_rollup
 
 # PR2 — Static files that form the cached prefix (never changes per request)
 _STATIC_PREFIX_FILES = [
@@ -226,6 +230,21 @@ class ExecutionPipeline:
                     "prompt_dynamic_chars": 0,
                     "prompt_cache_boundary": 0,
                 }
+                # PR4 — cost trace for deterministic path (cost=$0)
+                cost_record(
+                    execution_id=execution_id,
+                    agent=det_result.get("agent", "דבורה"),
+                    domain="deterministic",
+                    model="none",
+                    recommended_tier=routing_result.get("model", "tier1"),
+                    final_tier="none",
+                    deterministic_path=True,
+                    model_call_skipped=True,
+                    history_selected_turns=history_meta.get("history_selected_turns", 0),
+                    context_chars=ctx_status.get("chars", 0),
+                    handler_name=det_result.get("handler_name", ""),
+                    source_of_truth=det_result.get("source_of_truth", ""),
+                )
                 self._log_execution(det_execution_record)
                 return {
                     "status": "success",
@@ -302,6 +321,30 @@ class ExecutionPipeline:
             }
             
             self._log_execution(execution_record)
+
+            # Step 7b: PR4 — cost trace for model path
+            _md = result.get("metadata", {})
+            _model_used = _md.get("model_used", model_decision.model)
+            _escalation_reason = ""
+            if model_decision.blocked:
+                _escalation_reason = f"BLOCKED: {model_decision.reason}"
+            elif model_decision.downgraded:
+                _escalation_reason = f"DOWNGRADED: {model_decision.reason}"
+            elif _rank(model_decision.tier) >= _rank("tier3"):
+                _escalation_reason = f"tier3 APPROVED: {model_decision.reason}"
+            cost_record(
+                execution_id=execution_id,
+                agent=result.get("agent", "direct"),
+                domain=classified_domain,
+                model=_model_used,
+                recommended_tier=model_decision.recommended_tier,
+                final_tier=model_decision.tier,
+                deterministic_path=False,
+                model_call_skipped=False,
+                history_selected_turns=history_meta.get("history_selected_turns", 0),
+                context_chars=ctx_status.get("chars", 0),
+                escalation_reason=_escalation_reason,
+            )
 
             # Step 8: Auto git push — only on successful task completion
             exec_status = execution_result.get("status", "")
