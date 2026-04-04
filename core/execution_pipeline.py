@@ -21,6 +21,7 @@ from action_executor import execute_if_approved, send_response_if_ready, reset_s
 from model_selector import select_model, ModelDecision
 from history_selector import select_relevant_history
 from context_guard import build_ordered_prompt
+from deterministic_handlers import try_deterministic
 
 # PR2 — Static files that form the cached prefix (never changes per request)
 _STATIC_PREFIX_FILES = [
@@ -182,6 +183,59 @@ class ExecutionPipeline:
                     "static_chars":   prompt_structure["cache_boundary"],
                     "dynamic_chars":  len(prompt_structure["dynamic_suffix"]),
                     "total_chars":    prompt_structure["total_chars"],
+                }
+
+            # Step 2e: Deterministic handlers — no model call (PR3)
+            det_result = try_deterministic(message, self.workspace)
+            if det_result is not None:
+                # Short-circuit: answer from code, skip agent/model entirely
+                det_execution_record = {
+                    "execution_id": execution_id,
+                    "timestamp": start_time.isoformat(),
+                    "message": message[:100] + "..." if len(message) > 100 else message,
+                    "channel": channel,
+                    "group_id": group_id,
+                    "classified_domain": "deterministic",
+                    "expected_agent": None,
+                    "agent_execution_started": False,
+                    "agent_execution_completed": True,
+                    "direct_llm_response_blocked": True,
+                    "footer_applied": False,
+                    "send_path": "deterministic",
+                    "routing": routing_result["classification"],
+                    "context_status": ctx_status,
+                    "agent_response": "ok",
+                    "qa_passed": True,
+                    "action_executed": "completed",
+                    "response_sent": "response_ready",
+                    "context_payload_present": False,
+                    "dynamic_context_files": [],
+                    "duration_ms": int((datetime.now() - start_time).total_seconds() * 1000),
+                    # PR3 trace fields
+                    "deterministic_path": True,
+                    "model_call_skipped": True,
+                    "handler_name": det_result.get("handler_name", "?"),
+                    "source_of_truth": det_result.get("source_of_truth", "?"),
+                    # PR1+PR2 fields (passthrough)
+                    "history_total_turns": history_meta.get("history_total_turns", 0),
+                    "history_selected_turns": history_meta.get("history_selected_turns", 0),
+                    "history_dropped_turns": history_meta.get("history_dropped_turns", 0),
+                    "history_selector_used": True,
+                    "history_selector_reason_summary": "deterministic_shortcircuit",
+                    "prompt_static_chars": 0,
+                    "prompt_dynamic_chars": 0,
+                    "prompt_cache_boundary": 0,
+                }
+                self._log_execution(det_execution_record)
+                return {
+                    "status": "success",
+                    "execution_id": execution_id,
+                    "routing": routing_result,
+                    "agent_result": det_result,
+                    "qa_result": {"passed": True, "score": 1.0, "checks": {}, "recommendations": [], "blocking_issues": []},
+                    "execution_result": {"status": "completed", "action": "deterministic_response"},
+                    "response_result": {"status": "response_ready", "text": det_result["final_text"]},
+                    "execution_summary": det_execution_record,
                 }
 
             # Step 3: Execute based on routing decision
