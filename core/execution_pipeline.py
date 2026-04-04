@@ -20,6 +20,14 @@ from agent_executor import AgentExecutor
 from action_executor import execute_if_approved, send_response_if_ready, reset_send_gate
 from model_selector import select_model, ModelDecision
 from history_selector import select_relevant_history
+from context_guard import build_ordered_prompt
+
+# PR2 — Static files that form the cached prefix (never changes per request)
+_STATIC_PREFIX_FILES = [
+    "IDENTITY.md",
+    "SOUL.md",
+    "USER.md",
+]
 
 # Feature flag — set AUTO_GIT_PUSH_ENABLED=false to disable
 AUTO_GIT_PUSH_ENABLED = os.environ.get("AUTO_GIT_PUSH_ENABLED", "true").lower() != "false"
@@ -141,7 +149,7 @@ class ExecutionPipeline:
                     "execution_summary": violation_record,
                 }
 
-            # Step 2c: History selection — reduce payload before any model call
+            # Step 2c: History selection — reduce payload before any model call (PR1)
             raw_history = (metadata or {}).get("conversation_history", [])
             if raw_history:
                 selected_history, history_meta = select_relevant_history(
@@ -157,6 +165,23 @@ class ExecutionPipeline:
                     "history_dropped_turns": 0,
                     "history_selector_used": True,
                     "history_selector_reason_summary": "no_history",
+                }
+
+            # Step 2d: Prompt structure — static cached prefix + dynamic suffix (PR2)
+            _domain_state = routing_result.get("context", {}).get("files_loaded", [])
+            _dynamic_parts = [f"Domain: {classified_domain}", f"Message: {message}"]
+            if _domain_state:
+                _dynamic_parts.insert(0, f"State files: {', '.join(_domain_state)}")
+            prompt_structure = build_ordered_prompt(
+                static_files=_STATIC_PREFIX_FILES,
+                dynamic_content="\n".join(_dynamic_parts),
+            )
+            if metadata:
+                metadata["prompt_structure"] = {
+                    "cache_boundary": prompt_structure["cache_boundary"],
+                    "static_chars":   prompt_structure["cache_boundary"],
+                    "dynamic_chars":  len(prompt_structure["dynamic_suffix"]),
+                    "total_chars":    prompt_structure["total_chars"],
                 }
 
             # Step 3: Execute based on routing decision
@@ -216,6 +241,10 @@ class ExecutionPipeline:
                 "history_dropped_turns":  history_meta.get("history_dropped_turns", 0),
                 "history_selector_used":  history_meta.get("history_selector_used", True),
                 "history_selector_reason_summary": history_meta.get("history_selector_reason_summary", ""),
+                # PR2 — prompt structure trace fields
+                "prompt_static_chars":  (metadata or {}).get("prompt_structure", {}).get("static_chars", 0),
+                "prompt_dynamic_chars": (metadata or {}).get("prompt_structure", {}).get("dynamic_chars", 0),
+                "prompt_cache_boundary":(metadata or {}).get("prompt_structure", {}).get("cache_boundary", 0),
             }
             
             self._log_execution(execution_record)
