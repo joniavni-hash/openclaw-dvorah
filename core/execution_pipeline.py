@@ -26,6 +26,7 @@ from history_selector import select_relevant_history
 from context_guard import build_ordered_prompt
 from deterministic_handlers import try_deterministic
 from cost_trace import record as cost_record, daily_rollup as cost_rollup
+from general_classifier import classify_general, CHEAP_SUBTYPES
 
 # PR2 — Static files that form the cached prefix (never changes per request)
 _STATIC_PREFIX_FILES = [
@@ -154,11 +155,37 @@ class ExecutionPipeline:
                     "execution_summary": violation_record,
                 }
 
+            # Step 2b5: PR5 — General intent classification
+            general_subtype = None
+            general_meta = {}
+            if classified_domain == "general" and not expected_agent:
+                _hist_len = len((metadata or {}).get("conversation_history", []))
+                general_meta = classify_general(message, _hist_len)
+                general_subtype = general_meta["subtype"]
+                # Override model decision for cheap general subtypes
+                if general_meta["is_cheap"] and model_decision.tier == "tier2":
+                    from model_selector import MODELS, MODEL_SHORT, MAX_OUTPUT_TOKENS
+                    model_decision = type(model_decision)(
+                        tier="tier1",
+                        model=MODELS["tier1"],
+                        model_short=MODEL_SHORT["tier1"],
+                        allowed=True,
+                        reason=f"PR5 downgrade: general/{general_subtype} → tier1",
+                        max_output_tokens=MAX_OUTPUT_TOKENS["tier1"],
+                        recommended_tier=model_decision.recommended_tier,
+                        downgraded=True,
+                    )
+                # Stricter history window for general
+                if metadata:
+                    metadata["general_subtype"] = general_subtype
+                    metadata["general_history_window"] = general_meta["history_window"]
+
             # Step 2c: History selection — reduce payload before any model call (PR1)
             raw_history = (metadata or {}).get("conversation_history", [])
             if raw_history:
+                _recency = (metadata or {}).get("general_history_window", 12) if classified_domain == "general" else 12
                 selected_history, history_meta = select_relevant_history(
-                    raw_history, message
+                    raw_history, message, recency_window=_recency
                 )
                 if metadata:
                     metadata["conversation_history"] = selected_history
@@ -344,6 +371,8 @@ class ExecutionPipeline:
                 history_selected_turns=history_meta.get("history_selected_turns", 0),
                 context_chars=ctx_status.get("chars", 0),
                 escalation_reason=_escalation_reason,
+                # PR5
+                **({"handler_name": f"general/{general_subtype}"} if general_subtype else {}),
             )
 
             # Step 8: Auto git push — only on successful task completion
