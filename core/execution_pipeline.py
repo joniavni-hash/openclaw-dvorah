@@ -19,6 +19,7 @@ from context_guard import context_status, emergency_compact
 from agent_executor import AgentExecutor
 from action_executor import execute_if_approved, send_response_if_ready, reset_send_gate
 from model_selector import select_model, ModelDecision
+from history_selector import select_relevant_history
 
 # Feature flag — set AUTO_GIT_PUSH_ENABLED=false to disable
 AUTO_GIT_PUSH_ENABLED = os.environ.get("AUTO_GIT_PUSH_ENABLED", "true").lower() != "false"
@@ -140,6 +141,24 @@ class ExecutionPipeline:
                     "execution_summary": violation_record,
                 }
 
+            # Step 2c: History selection — reduce payload before any model call
+            raw_history = (metadata or {}).get("conversation_history", [])
+            if raw_history:
+                selected_history, history_meta = select_relevant_history(
+                    raw_history, message
+                )
+                if metadata:
+                    metadata["conversation_history"] = selected_history
+                    metadata["history_selector_meta"] = history_meta
+            else:
+                history_meta = {
+                    "history_total_turns": 0,
+                    "history_selected_turns": 0,
+                    "history_dropped_turns": 0,
+                    "history_selector_used": True,
+                    "history_selector_reason_summary": "no_history",
+                }
+
             # Step 3: Execute based on routing decision
             if routing_action == "handle_direct" and not expected_agent:
                 result = self._handle_direct(message, routing_result, metadata)
@@ -190,7 +209,13 @@ class ExecutionPipeline:
                 "response_sent": response_result.get("status", "unknown"),
                 "context_payload_present": bool(result.get("context_payload")),
                 "dynamic_context_files": (result.get("context_payload") or {}).get("context_files_read", []),
-                "duration_ms": int((datetime.now() - start_time).total_seconds() * 1000)
+                "duration_ms": int((datetime.now() - start_time).total_seconds() * 1000),
+                # PR1 — history selector trace fields
+                "history_total_turns":    history_meta.get("history_total_turns", 0),
+                "history_selected_turns": history_meta.get("history_selected_turns", 0),
+                "history_dropped_turns":  history_meta.get("history_dropped_turns", 0),
+                "history_selector_used":  history_meta.get("history_selector_used", True),
+                "history_selector_reason_summary": history_meta.get("history_selector_reason_summary", ""),
             }
             
             self._log_execution(execution_record)
