@@ -107,6 +107,14 @@ class Router:
                 r"תיקונים|corrections|דפוסי.*שגיאות|מתיקונים",
             ],
 
+            "restaurant": [
+                r"מסעדה|מסעדות|restaurant|restaurants",
+                r"הזמנת מקום|הזמנה.*מסעדה|book.*table|reservation",
+                r"שולחן.*ל|table.*for",
+                r"ontopo|אונטופו|tabit|טאביט",
+                r"לאכול.*בחוץ|eating.*out|dinner.*out|ארוחת.*ערב",
+                r"איפה.*לאכול|where.*eat|מקום.*לאכול",
+            ],
             "scheduling": [
                 r"\bמתי\b|\bwhen\b|תזכיר|remind",
                 r"פגישה|meeting|appointment",
@@ -127,6 +135,7 @@ class Router:
         "group_retrieval": ["state/KNOWN_GROUPS.md", "state/GROUP_MEMBERS.md", "state/GROUP_MEMORY.md"],
         "fitness":         ["state/fitness_tracker.md"],
 
+        "restaurant":      ["integrations/ONTOPO.md", "integrations/TABIT.md", "state/RESTAURANT_SLUGS.json"],
         "marketing":       ["state/OPEN_TASKS.md", "state/VILLA_LITHOS_PROFILE.md"],
         "research":        ["state/OPEN_TASKS.md"],
         "cto":             ["state/health_check.json", "state/error_digest_latest.json", "state/OPEN_TASKS.md"],
@@ -144,6 +153,7 @@ class Router:
         "marketing":        "tier2",
         "cto":              "tier1",
         "scheduling":       "tier1",
+        "restaurant":       "tier1",
         "general":          "tier2",
     }
 
@@ -179,6 +189,7 @@ class Router:
                 "whatsapp_group":   "odya",
                 "group_retrieval":  "odya",   # DM asking about a group → odya retrieves
                 "research":         "tzofit",
+                "restaurant":       "tzofit",
                 "scheduling":       "gabi",
                 "cto":              "gabi",
                 "marketing":        "tali",
