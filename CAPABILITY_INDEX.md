@@ -158,6 +158,31 @@ Keywords:
 Load order:
 1. `integrations/TAILSCALE.md`
 
+## Restaurant Booking / Dining
+Keywords:
+- restaurant
+- booking
+- reservation
+- table
+- ontopo
+- tabit
+- מסעדה
+- הזמנה
+- שולחן
+- הזמנת מקום
+- מסעדות
+
+Load order:
+1. `integrations/ONTOPO.md`
+2. `integrations/TABIT.md`
+3. `state/RESTAURANT_SLUGS.json`
+
+Notes:
+- Ontopo is the primary platform for fine dining and chef restaurants
+- Tabit is common for casual restaurants and has a mobile app with real-time search
+- Many restaurants appear on both platforms
+- Restaurant slugs database contains 140+ venues organized by city
+
 ## Web Search / Browser
 Keywords:
 - search

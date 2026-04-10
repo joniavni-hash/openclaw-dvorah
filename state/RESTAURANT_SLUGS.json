@@ -1,0 +1,238 @@
+{
+  "_meta": {
+    "description": "Restaurant slug database for Ontopo and Tabit booking platforms",
+    "last_updated": "2026-04-10",
+    "ontopo_url_pattern": "https://ontopo.com/en/il/page/{slug_or_id}",
+    "tabit_url_pattern": "https://tgm-rsv.tabit.cloud/#!/{restaurant_id}/booking/search",
+    "notes": "Slugs can be text-based (e.g. 'taizu') or numeric IDs (e.g. '83077556'). Both work in the Ontopo URL pattern."
+  },
+  "ontopo": {
+    "tel_aviv": [
+      { "name": "Taizu", "slug": "taizu", "cuisine": "Asian-Mediterranean", "kosher": false },
+      { "name": "CAFE TAIZU (Kosher)", "slug": "22341758", "cuisine": "Asian-Mediterranean", "kosher": true },
+      { "name": "Claro", "slug": "24489442", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "North Abraxas", "slug": "83728647", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "OCD", "slug": "88542392", "cuisine": "Tasting Menu", "kosher": false },
+      { "name": "Hasalon", "slug": "12618300", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "DVORA", "slug": "93609054", "cuisine": "Israeli", "kosher": true },
+      { "name": "Night Kitchen", "slug": "20745964", "cuisine": "Bar & Restaurant", "kosher": false },
+      { "name": "Katzir", "slug": "38952955", "cuisine": "Seasonal Israeli", "kosher": false },
+      { "name": "Baba Yaga", "slug": "54380456", "cuisine": "European-Mediterranean-Russian", "kosher": false },
+      { "name": "Rendez-vous", "slug": "40980635", "cuisine": "French", "kosher": false },
+      { "name": "ASA Izakaya", "slug": "99180045", "cuisine": "Japanese", "kosher": false },
+      { "name": "Yaffo Tel Aviv", "slug": "34362976", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Thai House", "slug": "thaihouse", "cuisine": "Thai", "kosher": false },
+      { "name": "Thai Street Food", "slug": "41859159", "cuisine": "Thai", "kosher": false },
+      { "name": "Ouzeria", "slug": "28899692", "cuisine": "Greek-Mediterranean", "kosher": false },
+      { "name": "Onza", "slug": "onza", "cuisine": "Turkish-Ottoman", "kosher": false },
+      { "name": "Santa Katarina", "slug": "53724621", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Hotel Montefiore", "slug": "65314945", "cuisine": "French-Asian", "kosher": false },
+      { "name": "Montefiore22-A2", "slug": "27962692", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Imperial", "slug": "71673788", "cuisine": "Cocktail Bar", "kosher": false },
+      { "name": "LP", "slug": "83229959", "cuisine": "Cocktail Bar & Wine Bar", "kosher": false },
+      { "name": "Cafe Popular", "slug": "56055192", "cuisine": "Cafe & Bar", "kosher": false },
+      { "name": "Cafe Europa", "slug": "cafeeuropa", "cuisine": "Cafe-Brasserie", "kosher": false },
+      { "name": "Grand Cafe Turkiz", "slug": "32409506", "cuisine": "Brasserie", "kosher": false },
+      { "name": "Dizengoff Cafe", "slug": "73991020", "cuisine": "Cafe", "kosher": false },
+      { "name": "Cafe Italia", "slug": "cafeitalia", "cuisine": "Italian", "kosher": false },
+      { "name": "Barbur Grill & Bar", "slug": "30131276", "cuisine": "Mediterranean Grill", "kosher": false },
+      { "name": "Vega Bar", "slug": "35175387", "cuisine": "Wine Bar", "kosher": false },
+      { "name": "Jazz Kissa Bar", "slug": "72810289", "cuisine": "Jazz Bar", "kosher": false },
+      { "name": "HELENA Wine Bar", "slug": "84482361", "cuisine": "Wine Bar & Pintxos", "kosher": false },
+      { "name": "Whiskey Bar & Museum", "slug": "54569070", "cuisine": "Whiskey Bar", "kosher": false },
+      { "name": "A la Bar", "slug": "52073325", "cuisine": "Bar", "kosher": false },
+      { "name": "Shuffle Bar", "slug": "shuffle", "cuisine": "Bar", "kosher": false },
+      { "name": "Deli Vino", "slug": "15875485", "cuisine": "Wine Bar & Deli", "kosher": false },
+      { "name": "Flor Wine Shop", "slug": "44883169", "cuisine": "Wine Bar", "kosher": false },
+      { "name": "ARIA Restaurant", "slug": "18560881", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Taqueria", "slug": "65374258", "cuisine": "Mexican", "kosher": false },
+      { "name": "Ze Sushi", "slug": "97169197", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "YAN", "slug": "20214686", "cuisine": "Asian-Sushi", "kosher": false },
+      { "name": "Moon Bograshov", "slug": "32609329", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "Joya Tel Aviv (Kosher)", "slug": "71628036", "cuisine": "Italian", "kosher": true },
+      { "name": "GRECO KOSHER", "slug": "grecokosher", "cuisine": "Mediterranean", "kosher": true },
+      { "name": "Meatos", "slug": "61098150", "cuisine": "Steak", "kosher": false },
+      { "name": "Omnia Brasserie", "slug": "34502383", "cuisine": "Steak & Brasserie", "kosher": false },
+      { "name": "Brasserie 18", "slug": "93797570", "cuisine": "Brasserie", "kosher": false },
+      { "name": "POUPEE", "slug": "66391500", "cuisine": "French", "kosher": false },
+      { "name": "GABAGOOL Pop Up", "slug": "15206084", "cuisine": "Italian-American", "kosher": false },
+      { "name": "RAMA Italian Kitchen & Bar", "slug": "54040297", "cuisine": "Italian", "kosher": false },
+      { "name": "animar", "slug": "animar", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "animar (Italian evening)", "slug": "animaritalian", "cuisine": "Italian", "kosher": false },
+      { "name": "Hudson Lilinblum", "slug": "22512632", "cuisine": "American Steakhouse", "kosher": false },
+      { "name": "Hudson Ramat Hahayal", "slug": "92184508", "cuisine": "American Steakhouse", "kosher": false },
+      { "name": "Peking Duck House", "slug": "23432994", "cuisine": "Chinese", "kosher": false },
+      { "name": "Fifty and One", "slug": "67365513", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Alena (Norman Hotel)", "slug": "alena", "cuisine": "Fine Dining", "kosher": false },
+      { "name": "Tasting Room", "slug": "tastingroom", "cuisine": "Tasting Menu", "kosher": false },
+      { "name": "Restaurant a (Yuval Ben-Naria)", "slug": "83077556", "cuisine": "Asian Street Food", "kosher": false },
+      { "name": "Pastel", "slug": "pastel", "cuisine": "Mediterranean", "kosher": false }
+    ],
+    "jerusalem": [
+      { "name": "Machneyuda", "slug": "machneyuda", "cuisine": "Mediterranean-Middle Eastern", "kosher": false },
+      { "name": "Pitmaster Jerusalem", "slug": "98963887", "cuisine": "Smoked Meat BBQ", "kosher": true },
+      { "name": "Mona Jerusalem", "slug": "46042376", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Rooftop Jerusalem", "slug": "rooftop", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Veranda Jerusalem", "slug": "verandajerusalem", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "CHAKRA", "slug": "59594032", "cuisine": "Fish & Seafood", "kosher": false },
+      { "name": "Hamotzi", "slug": "50384695", "cuisine": "Israeli", "kosher": false },
+      { "name": "Palomino", "slug": "48390724", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Red Heifer Steakhouse", "slug": "24517516", "cuisine": "Steakhouse", "kosher": false },
+      { "name": "Super HaMizrah", "slug": "62060742", "cuisine": "Asian", "kosher": false },
+      { "name": "Ramban Hotel Restaurant", "slug": "61134791", "cuisine": "Creative Israeli", "kosher": true },
+      { "name": "Hatzot Jerusalem", "slug": "85480469", "cuisine": "Israeli Traditional", "kosher": true },
+      { "name": "The Grill Room (King David)", "slug": "81590357", "cuisine": "Steakhouse", "kosher": false },
+      { "name": "Entrecote Jerusalem", "slug": "68638218", "cuisine": "French Steak", "kosher": false },
+      { "name": "Meat Time", "slug": "94391109", "cuisine": "Meat", "kosher": false },
+      { "name": "Modern", "slug": "33290489", "cuisine": "Creative Jerusalem", "kosher": false },
+      { "name": "Denya Cafe Beit Hakerem", "slug": "40536602", "cuisine": "Cafe", "kosher": false },
+      { "name": "Cafe Lyon", "slug": "20410429", "cuisine": "French Cafe", "kosher": false },
+      { "name": "Brasserie Ein-Kerem", "slug": "brasseriejerusalem", "cuisine": "French Brasserie", "kosher": false },
+      { "name": "Bar Tuv (Beit Shemesh)", "slug": "22487621", "cuisine": "Pub", "kosher": false }
+    ],
+    "haifa": [
+      { "name": "ROLA", "slug": "34883468", "cuisine": "Arab-Levantine", "kosher": false },
+      { "name": "Najma", "slug": "39737206", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Nirvana", "slug": "nirvana", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Raseef 33", "slug": "93074107", "cuisine": "Mediterranean Fusion", "kosher": false },
+      { "name": "Ruben Neve Shaanan", "slug": "40858914", "cuisine": "American Steakhouse", "kosher": false },
+      { "name": "Ruben Big Krayot", "slug": "96548878", "cuisine": "American Steakhouse", "kosher": false },
+      { "name": "Sinta Bar", "slug": "88557245", "cuisine": "Bistro", "kosher": false },
+      { "name": "Talpiot", "slug": "28407902", "cuisine": "Hamara-Casual", "kosher": false },
+      { "name": "Pub Morgan", "slug": "98102567", "cuisine": "Pub", "kosher": false },
+      { "name": "Del-mar", "slug": "20180981", "cuisine": "Fish & Seafood", "kosher": false },
+      { "name": "Reef Cafe", "slug": "93250189", "cuisine": "Dairy Cafe", "kosher": false },
+      { "name": "Strudel", "slug": "59892064", "cuisine": "Mediterranean-Italian", "kosher": false },
+      { "name": "Tatami", "slug": "55965290", "cuisine": "Asian Fusion-Sushi", "kosher": false },
+      { "name": "Shwarma Bili", "slug": "52399450", "cuisine": "Shawarma", "kosher": false }
+    ],
+    "herzliya": [
+      { "name": "Sunset Kitchen (Daniel Hotel)", "slug": "47003649", "cuisine": "Dairy Chef", "kosher": true },
+      { "name": "Calata 15", "slug": "calata15", "cuisine": "Italian", "kosher": false },
+      { "name": "Herbert Samuel (Ritz Carlton)", "slug": "39102664", "cuisine": "Chef Restaurant", "kosher": true },
+      { "name": "Nono", "slug": "91751874", "cuisine": "Italian", "kosher": false },
+      { "name": "Zozobra", "slug": "93323870", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Gazebbo", "slug": "gazebbo", "cuisine": "Beach Restaurant", "kosher": false },
+      { "name": "Nafis", "slug": "nafishertz", "cuisine": "Bar-Restaurant", "kosher": false },
+      { "name": "Venice Beach Bar", "slug": "61231325", "cuisine": "Beach Bar", "kosher": false },
+      { "name": "Cafe Tiran", "slug": "13283953", "cuisine": "Cafe", "kosher": false },
+      { "name": "Yam Bar", "slug": "15296344", "cuisine": "Bar", "kosher": false },
+      { "name": "Al Hamayim (Kosher)", "slug": "62402502", "cuisine": "Mediterranean", "kosher": true },
+      { "name": "Cafe Toscana", "slug": "28865745", "cuisine": "Italian Cafe", "kosher": false },
+      { "name": "Bangkok Kitchen", "slug": "81805588", "cuisine": "Thai", "kosher": false }
+    ],
+    "ramat_gan": [
+      { "name": "River Sushi", "slug": "50675914", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "Pizza Karina", "slug": "35199130", "cuisine": "Pizza", "kosher": false },
+      { "name": "PLAZA", "slug": "53924943", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Otoro Handroll Bar", "slug": "88640968", "cuisine": "Japanese", "kosher": false },
+      { "name": "frug&co", "slug": "66519014", "cuisine": "Cafe-Restaurant", "kosher": false },
+      { "name": "Shula BaHatzer", "slug": "shulaba", "cuisine": "Israeli", "kosher": false },
+      { "name": "Miss V", "slug": "43040634", "cuisine": "Vegan Asian", "kosher": false },
+      { "name": "Sai Sushi Bar", "slug": "38182106", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "Neighbors Ramat Chen", "slug": "68314587", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Cafe Lugano", "slug": "19516853", "cuisine": "Cafe", "kosher": false },
+      { "name": "Fresh the Market Ayalon", "slug": "58172775", "cuisine": "Fresh Market", "kosher": false }
+    ],
+    "raanana": [
+      { "name": "Felicita", "slug": "22063899", "cuisine": "Italian", "kosher": false },
+      { "name": "Brasserie Kazan", "slug": "kazan", "cuisine": "French Brasserie", "kosher": false },
+      { "name": "HaVeDa", "slug": "11217820", "cuisine": "Mediterranean", "kosher": false }
+    ],
+    "rishon_letzion": [
+      { "name": "Burattino", "slug": "45480858", "cuisine": "Italian Chef", "kosher": false },
+      { "name": "Tampopo", "slug": "95357961", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "Vivino", "slug": "25787144", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Belago", "slug": "25871046", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Se Tu Pizza & Bar", "slug": "15511330", "cuisine": "Italian-Pizza", "kosher": false }
+    ],
+    "rehovot": [
+      { "name": "La La", "slug": "59819678", "cuisine": "Wine Bar", "kosher": true },
+      { "name": "River Rehovot", "slug": "24173244", "cuisine": "Noodles & Sushi", "kosher": false },
+      { "name": "Fabrica", "slug": "fabrica", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "La Morse", "slug": "70185226", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Dublin Rehovot", "slug": "75361998", "cuisine": "Pub", "kosher": false },
+      { "name": "Hamburg", "slug": "70202128", "cuisine": "Burgers", "kosher": false }
+    ],
+    "petah_tikva": [
+      { "name": "Patrick's Rooftop", "slug": "71087242", "cuisine": "Bar-Restaurant", "kosher": true },
+      { "name": "MARGAUX", "slug": "64872830", "cuisine": "French Brasserie", "kosher": true },
+      { "name": "Lechem Basar", "slug": "30722100", "cuisine": "Meat", "kosher": true }
+    ],
+    "netanya": [
+      { "name": "Rhythm Social and Front", "slug": "42972265", "cuisine": "Bar-Restaurant", "kosher": false },
+      { "name": "Jacko", "slug": "84002699", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Rumor 22 Poleg", "slug": "rumor22poleg", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Murphy's Natanya", "slug": "24924737", "cuisine": "Pub", "kosher": false },
+      { "name": "Furman's Bar", "slug": "55214678", "cuisine": "Bar", "kosher": false }
+    ],
+    "beer_sheva": [
+      { "name": "Goomba", "slug": "44232862", "cuisine": "Asian", "kosher": false },
+      { "name": "Kepasa", "slug": "32321286", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "BASTORY", "slug": "63121533", "cuisine": "Bar-Restaurant", "kosher": false }
+    ],
+    "kfar_saba": [
+      { "name": "Jem's Beer Factory", "slug": "64450747", "cuisine": "Pub & Beer", "kosher": false },
+      { "name": "Japanika", "slug": "17460292", "cuisine": "Japanese-Sushi", "kosher": false }
+    ],
+    "eilat": [
+      { "name": "Israelit", "slug": "14023625", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Hamifratz", "slug": "29583986", "cuisine": "Israeli", "kosher": false }
+    ],
+    "ashdod": [
+      { "name": "OIA Kosher Greek", "slug": "38460436", "cuisine": "Greek", "kosher": true },
+      { "name": "Farino Pizza", "slug": "38116326", "cuisine": "Pizza", "kosher": false },
+      { "name": "Trump Kosher", "slug": "95337026", "cuisine": "Mediterranean", "kosher": true },
+      { "name": "Idi Fish Restaurant", "slug": "89276009", "cuisine": "Fish & Seafood", "kosher": false }
+    ],
+    "ashkelon": [
+      { "name": "Brasserie Marine", "slug": "55280391", "cuisine": "French Brasserie", "kosher": false }
+    ],
+    "north": [
+      { "name": "Limousine (Ramat Yishai)", "slug": "limousine", "cuisine": "Steakhouse", "kosher": false },
+      { "name": "Pitmaster Alonim", "slug": "51951438", "cuisine": "Smoked Meat BBQ", "kosher": true },
+      { "name": "Bat Harim (Zikhron Ya'akov)", "slug": "batharim", "cuisine": "Deli & Wine Bar", "kosher": false },
+      { "name": "Wine Bar (Pardes Hanna)", "slug": "77070660", "cuisine": "Wine Bar", "kosher": false },
+      { "name": "Fiori Italian House (Pardes Hanna)", "slug": "39676585", "cuisine": "Italian", "kosher": false },
+      { "name": "Iron Restaurant (Pardes Hanna)", "slug": "31665860", "cuisine": "Meat", "kosher": false },
+      { "name": "Travel Hotel (Gesher Haziv)", "slug": "24970918", "cuisine": "Hotel Restaurant", "kosher": false },
+      { "name": "Chateau Golan (Eliad)", "slug": "22699582", "cuisine": "Winery", "kosher": false },
+      { "name": "Berkat Ram (Majdal al-Shams)", "slug": "34709230", "cuisine": "Local Golan", "kosher": false },
+      { "name": "Sushi Sho Fi (Daliyat al-Karmel)", "slug": "58816226", "cuisine": "Japanese-Sushi", "kosher": false },
+      { "name": "House Restaurant (Ein Hawd)", "slug": "24343425", "cuisine": "Arabic Home Cooking", "kosher": false },
+      { "name": "Cafe LaLush", "slug": "cafelalush", "cuisine": "Brasserie", "kosher": false },
+      { "name": "Rutenberg (Gesher)", "slug": "rutenberg", "cuisine": "Mediterranean", "kosher": false }
+    ],
+    "south": [
+      { "name": "Rosemary (Mitzpe Ramon)", "slug": "73618102", "cuisine": "Mediterranean", "kosher": false },
+      { "name": "Japan Japan (Mitzpe Ramon)", "slug": "32462840", "cuisine": "Japanese-Asian", "kosher": true }
+    ],
+    "other": [
+      { "name": "Bella Restaurant (Beit She'arim)", "slug": "24809579", "cuisine": "Italian-Mediterranean", "kosher": false },
+      { "name": "Le Restaurant (Airport City)", "slug": "27142318", "cuisine": "French", "kosher": false },
+      { "name": "Landwer Cafe (Airport City)", "slug": "82844212", "cuisine": "Cafe", "kosher": false },
+      { "name": "Landwer Cafe (Kadima Zoran)", "slug": "24471413", "cuisine": "Cafe", "kosher": false },
+      { "name": "Bueno Kosher Italian (Yehud-Monosson)", "slug": "47306494", "cuisine": "Italian", "kosher": true },
+      { "name": "Kan Kai Sushi Wok Bar (Rosh Haayin)", "slug": "14515071", "cuisine": "Japanese", "kosher": false },
+      { "name": "Abdalla Grill (Or Yehuda)", "slug": "32737064", "cuisine": "Meat Grill", "kosher": false },
+      { "name": "Vinny Wine Bar (Givatayim)", "slug": "19284048", "cuisine": "Wine Bar", "kosher": false },
+      { "name": "Luchana Gea", "slug": "78817318", "cuisine": "Mediterranean", "kosher": false }
+    ]
+  },
+  "tabit": {
+    "_note": "Tabit has no public restaurant directory. IDs are 24-char hex MongoDB ObjectIds. Add known IDs below as you discover them.",
+    "_booking_url": "https://tgm-rsv.tabit.cloud/#!/{id}/booking/search",
+    "_app_search": "The Tabit app (iOS/Android) has a built-in restaurant search by area. Use it to discover restaurants and their IDs.",
+    "known_restaurants": [
+      { "name": "Unknown (sample 1)", "id": "5a6077c576d9152900a00195" },
+      { "name": "Unknown (sample 2)", "id": "5bcc2b0ebfee100100dcac1d" },
+      { "name": "Ad HaEtzem Express", "id": "5b2a05572ee2b91700125eb6" }
+    ]
+  },
+  "search_tips": {
+    "ontopo_by_city": "Use https://ontopo.com/en/il/{city} to browse. Cities: tel-aviv, jerusalem, haifa, herzliya, raanana, ramat-gan, netanya, ashdod, ashkelon, beer-sheva, eilat, modiin, rehovot, rishon-lezion, petah-tikva, holon, kfar-saba, hod-hasharon",
+    "ontopo_by_tag": "Use https://ontopo.com/en/il/{city}/tags/{tag}. Tags: tasting_menu, romantic, kosher, israeli, italian, asian, seafood, steak, safe_zone",
+    "ontopo_best_of": "https://ontopo.com/en/il/bestof2025/all_restaurants",
+    "tabit_app": "Download the Tabit app to search restaurants by location. The app shows real-time availability."
+  }
+}
