@@ -23,37 +23,97 @@
 - **Browse by city**: `https://ontopo.com/en/il/{city}` (tel-aviv, jerusalem, haifa, herzliya, raanana, ramat-gan, netanya, ashdod, beer-sheva, eilat, rehovot, rishon-lezion, petah-tikva, kfar-saba, hod-hasharon)
 - **Browse by tag**: `https://ontopo.com/en/il/{city}/tags/{tag}` (tasting_menu, romantic, kosher, israeli, italian, asian, seafood, steak)
 
-## API Pattern ל-Ontopo
-POST `https://ontopo.com/api/availability_search`
+## Ontopo API (verified working)
 
-Payload pattern:
+### שלב 1: חיפוש מסעדה לפי שם
+```
+GET https://ontopo.com/api/venue_search?slug=15171493&version=1&terms={query}&locale=he
+```
+Headers: `User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36`
+מחזיר מערך של `{ slug, title, address }`. אפשר גם `locale=en`.
+
+### שלב 2: המרת text slug ל-numeric slug (חובה!)
+```
+POST https://ontopo.co.il/api/content/fetchContentMeta
+Content-Type: application/json
+```
+Body:
+```json
+{ "slug": "taizu", "distributor": "15171493" }
+```
+אם `document_type === "page"` → ה-`slug` בתשובה הוא ה-numeric slug.
+**חשוב**: ה-availability API דורש numeric slug, לא text slug!
+
+### שלב 3: בדיקת זמינות
+```
+POST https://ontopo.co.il/api/availability/searchAvailability
+Content-Type: application/json
+```
+Body:
 ```json
 {
-  "slug": "<restaurant-slug>",
+  "slug": "<NUMERIC-slug-from-step-2>",
   "locale": "he",
   "criteria": {
-    "date": "YYYYMMDD",
-    "time": "HHMM",
-    "size": "<party-size>"
-  },
-  "data": {
-    "analytics": {
-      "market_id": "",
-      "venue_id": "<venue-id>",
-      "referrer_domain": null,
-      "device_id": "<device-id>",
-      "platform": "web",
-      "distributor_id": "il",
-      "origin": "venue_page",
-      "sub_origin": null
-    }
+    "size": "6",
+    "date": "20260412",
+    "time": "2100"
   }
 }
 ```
+תשובה:
+- `method: "standby"` או `"disabled"` = אין מקום
+- `areas[]` עם `options[]` = יש שולחן! כל option כולל `time` ו-`text` (סטטוס)
 
-Other useful API endpoints:
-- `GET /api/venue_search?query={name}` — search by name
-- `GET /api/venue_profile?slug={slug}` — get venue details + venue_id
+### דוגמה מלאה לטאיזו
+```
+1. GET venue_search?slug=15171493&version=1&terms=taizu&locale=en
+   → slug: "taizu"
+2. POST fetchContentMeta { "slug": "taizu", "distributor": "15171493" }
+   → numeric slug (e.g. "36960535")
+3. POST searchAvailability { "slug": "36960535", "locale": "he", "criteria": { "size": "6", "date": "20260412", "time": "2100" } }
+   → areas with available times
+```
+
+## Tabit API (verified working, no auth needed!)
+
+### חיפוש מסעדה + זמינות בקריאה אחת
+```
+GET https://bridge.tabit.cloud/organizations/search?lat={lat}&lng={lng}&extendLimit=true&booking={encoded-json}
+```
+Headers: `Accept: application/json`
+
+הפרמטר `booking` הוא JSON מקודד ב-URL:
+```json
+{ "timestamp": "2026-04-12T18:00:00.000Z", "seats_count": "6" }
+```
+**שים לב**: ה-timestamp הוא UTC (ישראל = UTC+3, אז 21:00 ישראל = 18:00 UTC)
+
+### קואורדינטות ערים
+| עיר | lat | lng |
+|-----|-----|-----|
+| תל אביב | 32.0853 | 34.7818 |
+| ירושלים | 31.7683 | 35.2137 |
+| חיפה | 32.7940 | 34.9896 |
+| הרצליה | 32.1629 | 34.7915 |
+| רמת גן | 32.0680 | 34.8248 |
+| נתניה | 32.3215 | 34.8532 |
+| ראשון לציון | 31.9730 | 34.7925 |
+| פתח תקווה | 32.0841 | 34.8878 |
+| באר שבע | 31.2529 | 34.7915 |
+| אשדוד | 31.8014 | 34.6435 |
+
+### תשובה
+מחזיר `{ organizations: [...] }` — כל מסעדה כוללת:
+- `name`, `address`, `city`, `phone`, `_id`, `publicUrlLabel`
+- `time_slots[]` — כל slot כולל `timestamp`, `standby` (boolean), `pending` (boolean)
+- `standby: false` ו-`pending: false` = שולחן פנוי לאישור מיידי
+
+### דוגמה
+```
+GET https://bridge.tabit.cloud/organizations/search?lat=32.0853&lng=34.7818&extendLimit=true&booking=%7B%22timestamp%22%3A%222026-04-12T18%3A00%3A00.000Z%22%2C%22seats_count%22%3A%226%22%7D
+```
+→ מחזיר את כל המסעדות עם זמינות באזור תל אביב ל-6 סועדים
 
 ## תשובה למשתמש
 להחזיר רק:
