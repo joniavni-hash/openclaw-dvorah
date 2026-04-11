@@ -1,7 +1,7 @@
 # RESTAURANTS.md
 
 מטרת הקובץ: להפוך חיפוש והזמנת מסעדות לתהליך מהיר, יעיל וזול.
-עודכן: 2026-04-11 | סה"כ: 178 מסעדות
+עודכן: 2026-04-11 | סה"כ: 200 מסעדות (175 Ontopo + 25 Tabit)
 
 ## כלל עבודה
 במסעדות בתל אביב והסביבה:
@@ -18,7 +18,8 @@
 - **Ontopo**: `https://ontopo.com/en/il/page/{slug}` (slug = text or numeric ID)
 - **Ontopo Hebrew**: `https://ontopo.com/he/il/page/{slug}`
 - **Ontopo Menu**: `https://ontopo.co.il/en/{slug}/menu`
-- **Tabit**: `https://tgm-rsv.tabit.cloud/#!/{id}/booking/search`
+- **Tabit (option 1)**: `https://tgm-rsv.tabit.cloud/#!/{orgId}/booking/search`
+- **Tabit (option 2)**: `https://tabitisrael.co.il/online-reservations/create-reservation?step=search&orgId={orgId}`
 - **Browse by city**: `https://ontopo.com/en/il/{city}` (tel-aviv, jerusalem, haifa, herzliya, raanana, ramat-gan, netanya, ashdod, beer-sheva, eilat, rehovot, rishon-lezion, petah-tikva, kfar-saba, hod-hasharon)
 - **Browse by tag**: `https://ontopo.com/en/il/{city}/tags/{tag}` (tasting_menu, romantic, kosher, israeli, italian, asian, seafood, steak)
 
@@ -330,17 +331,65 @@ Other useful API endpoints:
 
 ---
 
-## Tabit (3 known)
+## Tabit (25 known)
 
-Tabit has no public directory. IDs are 24-char hex MongoDB ObjectIds.
-Booking URL: `https://tgm-rsv.tabit.cloud/#!/{id}/booking/search`
+Tabit has no public directory. IDs are 24-char hex strings (orgId).
+Booking URL options:
+- `https://tgm-rsv.tabit.cloud/#!/{id}/booking/search`
+- `https://tabitisrael.co.il/online-reservations/create-reservation?step=search&orgId={id}`
 The Tabit app (iOS/Android) has built-in search by area.
 
-| שם | Tabit ID |
-|----|----------|
-| Unknown (sample 1) | `5a6077c576d9152900a00195` |
-| Unknown (sample 2) | `5bcc2b0ebfee100100dcac1d` |
-| Ad HaEtzem Express | `5b2a05572ee2b91700125eb6` |
+### תל אביב
+
+| שם | Tabit orgId | עיר |
+|----|-------------|------|
+| Mashya (משייה) | `59f6e8a0dd87c02200c8488c` | תל אביב |
+| Turkiz Restaurant | `609928ba4e68f9c4a94eaa25` | תל אביב |
+| טוטו | `612c94440d569b1367ca96a9` | תל אביב |
+| Grand Cafe (גרנד קפה) | `5e2076c84ecb9dc7409db5ad` | תל אביב |
+| Moshik& | `666fdd6215d9f2a3682e49ee` | תל אביב |
+| האחים | `5adc4303e98e0717008ce965` | תל אביב |
+| Aka | `62de6bc0d2b0b203510fd3de` | תל אביב |
+| TATAMI Tel Aviv | tabitisrael.co.il/site/tatami-תל-אביב | תל אביב |
+| מחנה אסאדה | tabitisrael.co.il/site/מחנה-אסאדה-תל-אביב | תל אביב |
+| Bo'u (בואו) | `695babbebbf78e1114c7f6a3` | תל אביב |
+| Ad HaEtzem Express | `5b2a05572ee2b91700125eb6` | תל אביב |
+
+### ירושלים
+
+| שם | Tabit orgId | עיר |
+|----|-------------|------|
+| The Palace Restaurant | `62d7bd33fdaa58d7011905c6` | ירושלים |
+| King's Court Restaurant | `62d7bdf03d54e4515b9e24bb` | ירושלים |
+| Cafe Rimon (מדרחוב בן יהודה) | `5f72dd14f2e56cd68bc5bb63` | ירושלים |
+| Margo Wine Bar & Restaurant | `62e24bb6b2c3576635d1f354` | ירושלים |
+
+### הרצליה ושרון
+
+| שם | Tabit orgId | עיר |
+|----|-------------|------|
+| Yam 7 (ים 7) | `6022527f7eccba86572ea7e9` | הרצליה |
+| Johnny Wine Bar (ג'וני בר יין) | `6405b1188f7ca96c8221f5b9` | הרצליה |
+| Sushi Room Hills | `5e1dc42f632bd14093f4125e` | הרצליה |
+| Ginza Sushi Bar | `5c3d9c7ba265d81ebfe38da0` | הרצליה פיתוח |
+| רביבה וסיליה | `57b010e4cb82f61e009fe53a` | רמת השרון |
+| Nooch | `590b1a62140f622200805d2a` | רמת השרון |
+| Giraffe | `60fd7b148393393511caaedf` | גלילות |
+| נונו הוד השרון | `582ae49284574a1f00fc76e4` | הוד השרון |
+
+### שאר הארץ
+
+| שם | Tabit orgId | עיר |
+|----|-------------|------|
+| Mood Restaurant | `60a36e8f9234fdac785de5c4` | אילת |
+| Dolce (דולצ'ה) | `5eb000d40c7f98e444e32a16` | רעננה |
+| Rooftop Sky Bar | `5cb882ec27fb837df427158e` | רעננה |
+| או לה לה | `6135de3013c3c745fae2acc5` | באר שבע |
+| Jem's Rehovot | `5caf30d0423d6bea51a86145` | רחובות |
+| יקב טוליפ Le Bar | `61c07b4244fd3fe1e84014b3` | קרית טבעון |
+| סעידה בפארק | `5c87a722938e83264a853d05` | חולון |
+| Lighthouse 5th FLOOR | `5de3cc47f40017e0d061aec9` | תל אביב |
+| Tabit Dine Smart | `59ad40607f99812200344be2` | רשפון |
 
 ---
 
