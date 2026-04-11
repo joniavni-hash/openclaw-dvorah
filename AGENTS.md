@@ -15,6 +15,7 @@
 | whatsapp_group | אודיה 📱 (isolated API) | הודעה מקבוצה, מה חדש בקבוצה, סיכום |
 | group_retrieval | אודיה 📱 | מה כתבו בקבוצה של אלון? |
 | research | צופית 🔍 (isolated API) | תחקרי טיסות, מחקר שוק, השוואה |
+| restaurant | צופית 🔍 | מסעדה, הזמנת מקום, ontopo, tabit, איפה לאכול |
 | cto / automation / scheduling | גבי 🔧 | מצב מערכת, עדכון, אוטומציה, תזכורות, שגיאות |
 | general | דבורה 🧭 | שיחה כללית, שאלות מטא, follow-up |
 
@@ -112,6 +113,7 @@ python3 scripts/trace_service.py --stats
 - `group` → group profile + members + memory
 - `fitness` → fitness_tracker.md
 - `email` → OUTLOOK.md + OPEN_TASKS.md
+- `restaurant` → ONTOPO.md + TABIT.md + RESTAURANT_SLUGS.json
 - `legal` → legal agent files
 
 לטעינה ידנית נוספת (אם ה-pipeline לא מספיק): ראי `MEMORY_INDEX.md`
